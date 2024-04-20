@@ -21,11 +21,11 @@ export const Sidebar = ({ className }: Props) => {
       "flex h-full lg:w-[280px] lg:fixed left-0 top-0 px-4 border-r-2 flex-col",
       className,
     )}>
-      <Link href="/learn">
+      <Link href="/mainpage">
         <div className="pt-8 pl-4 pb-7 flex items-center gap-x-3">
           <Image src="/VLU_Logo.png" height={100} width={100} alt="VLU_Logo" />
           <h1 className="text-2xl font-extrabold text-red-600 tracking-wide">
-            TechFit
+            STMentor
           </h1>
         </div>
       </Link>

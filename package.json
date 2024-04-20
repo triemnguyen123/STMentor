@@ -1,5 +1,5 @@
 {
-  "name": "TechFit",
+  "name": "STMentor",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -14,6 +14,7 @@
     "db:reset": "tsx ./scripts/reset.ts"
   },
   "dependencies": {
+    "@clerk/clerk-sdk-node": "^5.0.0",
     "@clerk/nextjs": "^4.29.12",
     "@neondatabase/serverless": "^0.9.0",
     "@radix-ui/react-avatar": "^1.0.4",
@@ -57,6 +58,6 @@
     "postcss": "^8",
     "tailwindcss": "^3.4.3",
     "tsx": "^4.7.1",
-    "typescript": "^5"
+    "typescript": "^5.4.5"
   }
 }

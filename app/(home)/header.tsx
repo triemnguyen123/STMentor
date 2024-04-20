@@ -17,7 +17,7 @@ export const Header = () => {
         <div className="pt-8 pl-4 pb-7 flex items-center gap-x-3">
           <Image src="/VLU_Logo.png" height={100} width={100} alt="Logo" />
           <h1 className="text-2xl font-extrabold text-red-600 tracking-wide">
-            TechFit
+            STMentor
           </h1>
         </div>
         <ClerkLoading>
@@ -32,8 +32,8 @@ export const Header = () => {
           <SignedOut>
             <SignInButton
               mode="modal"
-              afterSignInUrl="/learn"
-              afterSignUpUrl="/learn"
+              afterSignInUrl="/"
+              afterSignUpUrl="/"
             >
               <Button size="lg" variant="ghost">
                 Login
