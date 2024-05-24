@@ -41,19 +41,9 @@ export const Sidebar = ({ className }: Props) => {
           iconSrc="/quests.svg"
         />
         <SidebarItem
-          label="Bảng Xếp hạng"
-          href="/leaderboard"
-          iconSrc="/leaderboard.svg"
-        />
-        <SidebarItem
-          label="Theo dõi điểm số"
+          label="Kết quả học tập"
           href="/"
           iconSrc="/diemso.png"
-        />
-        <SidebarItem
-          label="Học phần rớt"
-          href="/"
-          iconSrc="/robot.svg"
         />
       </div>
       <div className="p-4">
