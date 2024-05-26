@@ -135,7 +135,7 @@ const MainPage = () => {
   return (
     <div className="flex flex-row-reverse gap-[48px] px-6">
       <FeedWrapper>
-        <Header title="Chỗ điền điểm sinh viên" />
+        <Header title="Hệ Khuyến Nghị" />
         <div className="mb-10">
           <form onSubmit={handleSubmit}>
             {fields.map((field, index) => (

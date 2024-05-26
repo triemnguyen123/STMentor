@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     let client;
 
     try {
-      client = await MongoClient.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+      client = await MongoClient.connect(uri);
       const db = client.db('HeKhuyenNghi');
   
       await db.collection('KhuyenNghi').insertOne(data);
