@@ -33,7 +33,7 @@ const formComponent: React.FC<FormComponentProps> = ({ fields }) => {
     });
 
     if (response.ok) {
-      alert('Dữ liệu đã được gửi thành công');
+      alert('Dữ liệu được gửi thành công!');
     } else {
       alert('Có lỗi xảy ra khi gửi dữ liệu');
     }

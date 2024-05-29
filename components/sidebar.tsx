@@ -37,23 +37,23 @@ export const Sidebar = ({ className }: Props) => {
         />
         <SidebarItem
           label="Chương trình đào tạo"
-          href="/"
+          href="/chuongtrinh"
           iconSrc="/quests.svg"
         />
         <SidebarItem
           label="Kết quả học tập"
-          href="/"
+          href="/ketqua"
           iconSrc="/diemso.png"
         />
       </div>
-      <div className="p-4">
+      {/* <div className="p-4"> // icon button user bên dưới sidebar
         <ClerkLoading>
           <Loader className="h-5 w-5 text-muted-foreground animate-spin" />
         </ClerkLoading>
         <ClerkLoaded>
           <UserButton afterSignOutUrl="/" />
         </ClerkLoaded>
-      </div>
+      </div> */}
     </div>
   );
 };

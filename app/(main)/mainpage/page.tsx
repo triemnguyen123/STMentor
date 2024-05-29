@@ -1,15 +1,17 @@
-// mainpage/page.tsx
 'use client'
-//import { useClient } from '@react-client'; // Import useClient from the @react-client package
-import { FeedWrapper } from "@/components/feed-wrapper";
-import { UserProgress } from "@/components/user-progress";
-import { StickyWrapper } from "@/components/sticky-wrapper";
-import React, { FormEvent, useState } from 'react';
-import ErrorModal from './ErrorModal'; // Import ErrorModal component
+import { useState } from 'react';
+import { FeedWrapper } from '@/components/feed-wrapper';
+import ErrorModal from './ErrorModal';
+import { Header } from './header';
+import { useAuth } from '@clerk/clerk-react'; 
 
-import { Header } from "./header";
+
+
+
 
 const MainPage = () => {
+  const { userId } = useAuth(); 
+
   const subjects = {
     'Cơ sở ngành': [
       { name: 'Kỹ thuật lập trình', credits: 3 },
@@ -54,30 +56,42 @@ const MainPage = () => {
       { name: 'Mã hóa và an toàn dữ liệu', credits: 3 },
     ],
   };
-
+  type Field = {
+    id: string;
+    label: string;
+    type: string;
+    value: string;
+    min?: string;
+    max?: string;
+    semester: string;
+  };
+  
   const fieldsInitialState = [
-    { id: 'subjectName', label: 'Các môn học :', type: 'text', value: '' },
-    { id: 'score', label: 'Điểm :', type: 'number', min: '0', max: '10', value: '' },
+    { id: 'subjectName', label: 'Các môn học :', type: 'text', value: '', semester: 'HK1' },
+    { id: 'score', label: 'Điểm :', type: 'number', min: '0', max: '10', value: '', semester: 'HK1' },
   ];
+  
 
   const [fields, setFields] = useState(fieldsInitialState);
   const [error, setError] = useState<string | null>(null);
+  const [selectedSemester, setSelectedSemester] = useState<string>('HK1');
 
-  const handleSubmit = async (event: FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-  
-    const data = fields.reduce((acc: { [key: string]: any }, field) => {
-      if (field.type === 'text') {
-        const selectedOption = (document.getElementById(field.id) as HTMLSelectElement).selectedOptions[0];
-        acc[field.id] = { name: selectedOption.value, credits: selectedOption.dataset.credits };
-      } else {
-        const value = (document.getElementById(field.id) as HTMLInputElement).value;
-        acc[field.id] = field.type === 'number' ? Number(value) : value;
+    console.log('userId:', userId); // Kiểm tra giá trị của userId
+
+    const data = fields.reduce((acc: { subjects: { name: string, credits: number, score: number, semester: string }[] }, field, index) => {
+      if (index % 2 === 0) {
+        const subjectField = field;
+        const scoreField = fields[index + 1];
+        const selectedOption = (document.getElementById(subjectField.id) as HTMLSelectElement).selectedOptions[0];
+        const score = (document.getElementById(scoreField.id) as HTMLInputElement).value;
+        acc.subjects.push({ name: selectedOption.value, credits: parseInt(selectedOption.dataset.credits || '0'), score: parseFloat(score), semester: field.semester }); // Sử dụng học kỳ của môn học tại index
       }
       return acc;
-    }, {});
+    }, { subjects: [] });
   
-    const isValid = Object.values(data).every(value => !!value); // Check if all fields have value
+    const isValid = data.subjects.every(subject => subject.name && !isNaN(subject.score));
   
     if (!isValid) {
       setError('Vui lòng điền đầy đủ thông tin cho tất cả các trường');
@@ -89,10 +103,11 @@ const MainPage = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'user-id': userId || '', // Ensure userId is not null or undefined
         },
         body: JSON.stringify(data),
       });
-  
+
       if (response.ok) {
         alert('Dữ liệu đã được gửi thành công');
       } else {
@@ -112,19 +127,49 @@ const MainPage = () => {
   };
   
   
-
+  
+ 
   const handleAddField = () => {
     setFields([
       ...fields,
-      { id: `subjectName${fields.length}`, label: 'Các môn học :', type: 'text', value: '' },
-      { id: `score${fields.length}`, label: 'Điểm :', type: 'number', min: '0', max: '10', value: '' },
+      { 
+        id: `subjectName${fields.length / 2}`, 
+        label: 'Các môn học :', 
+        type: 'text', 
+        value: '', 
+        semester: selectedSemester // Sử dụng học kỳ được chọn hiện tại
+      },
+      { 
+        id: `score${fields.length / 2}`, 
+        label: 'Điểm :', 
+        type: 'number', 
+        min: '0', 
+        max: '10', 
+        value: '', 
+        semester: selectedSemester // Sử dụng học kỳ được chọn hiện tại
+      },
     ]);
   };
-
+  
   const handleInputChange = (id: string, value: string) => {
-    const updatedFields = fields.map((field) => (field.id === id ? { ...field, value } : field));
+    const index = fields.findIndex(field => field.id === id);
+    if (index !== -1) {
+      const updatedFields = [...fields];
+      updatedFields[index] = { ...fields[index], value };
+      setFields(updatedFields);
+    }
+  };
+  
+  const handleSemesterChange = (semester: string, index: number) => {
+    const updatedFields = [...fields];
+    updatedFields[index] = { ...fields[index], semester }; // chỉ cập nhật học kỳ của môn học tại index
     setFields(updatedFields);
   };
+  
+
+  
+  
+  
 
   const handleRemoveField = (index: number) => {
     const updatedFields = [...fields];
@@ -136,48 +181,66 @@ const MainPage = () => {
     <div className="flex flex-row-reverse gap-[48px] px-6">
       <FeedWrapper>
         <Header title="Hệ Khuyến Nghị" />
-        <div className="mb-10">
+        <div className="mb-10 justify-center">
           <form onSubmit={handleSubmit}>
             {fields.map((field, index) => (
-              <div key={field.id} className="flex justify-between items-center mb-4">
+              <div key={field.id} className="flex flex-wrap items-center mb-4">
                 <label htmlFor={field.id} className="mr-0">{field.label}</label>
-                {field.type === 'text' ? (
-                  <select
-                    id={field.id}
-                    name={field.id}
-                    className="border p-2 rounded-md"
-                    value={field.value}
-                    onChange={(e) => handleInputChange(field.id, e.target.value)}
-                  >
-                    {Object.entries(subjects).map(([category, subjects]) => (
-                      <optgroup key={category} label={category}>
-                        {subjects.map((subject, index) => (
-                          <option key={index} value={subject.name}>
-                            {subject.name} - {subject.credits} TC
-                          </option>
+                <div className="flex" style={{ width: '50%', margin: 'auto' }}>
+                  {field.type === 'text' ? (
+                    <>
+                      {index % 2 === 0 && 
+                        <select
+                          value={field.semester}
+                          onChange={(e) => handleSemesterChange(e.target.value, index)} // Pass both the selected value and the index
+                          className="border p-2 rounded-md mr-2"
+                        >
+                          <option value="HK1">HK1</option>
+                          <option value="HK2">HK2</option>
+                          <option value="HK3">HK3</option>
+                        </select>
+                      }
+                      <select
+                        id={field.id}
+                        name={field.id}
+                        className="border p-2 rounded-md"
+                        value={field.value}
+                        onChange={(e) => handleInputChange(field.id, e.target.value)}
+                      >
+                        <option value="" disabled hidden>Chọn môn học</option>
+                        {Object.entries(subjects).map(([category, subjects]) => (
+                          <optgroup key={category} label={category}>
+                            {subjects.map((subject, subIndex) => (
+                              <option key={`${category}-${subIndex}`} value={subject.name} data-credits={subject.credits}>
+                                {subject.name} - {subject.credits} TC
+                              </option>
+                            ))}
+                          </optgroup>
                         ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type={field.type}
-                    id={field.id}
-                    name={field.id}
-                    min={field.min}
-                    max={field.max}
-                    className="border p-2 rounded-md"
-                    value={field.value}
-                    onChange={(e) => handleInputChange(field.id, e.target.value)}
-                  />
-                )}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveField(index)}
-                  className="px-4 py-2 bg-red-500 text-white rounded-md"
-                >
-                  Remove
-                </button>
+                      </select>
+                    </>
+                  ) : (
+                    <input
+                      type={field.type}
+                      id={field.id}
+                      name={field.id}
+                      min={field.min}
+                      max={field.max}
+                      className="border p-2 rounded-md"
+                      value={field.value}
+                      onChange={(e) => handleInputChange(field.id, e.target.value)}
+                    />
+                  )}
+                </div>
+                {index % 2 === 0 && 
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveField(index)}
+                    className="px-4 py-2 bg-red-500 text-white rounded-md"
+                  >
+                    Remove
+                  </button>
+                }
               </div>
             ))}
             <div className="flex justify-center mt-10">
@@ -185,7 +248,7 @@ const MainPage = () => {
                 <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-md">Submit</button>
               </div>
               <div>
-                <button onClick={handleAddField} className="px-4 py-2 bg-green-500 text-white rounded-md">Add Field</button>
+                <button type="button" onClick={handleAddField} className="px-4 py-2 bg-green-500 text-white rounded-md">Add Subject</button>
               </div>
             </div>
           </form>
@@ -194,6 +257,9 @@ const MainPage = () => {
       {error && <ErrorModal message={error} onClose={() => setError(null)} />}
     </div>
   );
+  
+  
+  
 };
 
 export default MainPage;
