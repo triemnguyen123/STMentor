@@ -50,7 +50,7 @@ const Ketqua = () => {
     };
 
     fetchResults();
-  }, [userId]); // Chỉ gọi lại API khi `userId` thay đổi
+  }, [userId]); 
 
   if (loading) return <div>Đang tải dữ liệu...</div>;
   if (error) return <div>{error}</div>;

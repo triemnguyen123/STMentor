@@ -8,7 +8,7 @@ export default async function handler(req, res) {
       return;
     }
 
-    const userId = req.headers['user-id']; // Lấy userId từ header
+    const userId = req.headers['user-id']; 
     if (!userId) {
       res.status(400).json({ message: 'Thiếu userId' });
       return;
@@ -22,7 +22,6 @@ export default async function handler(req, res) {
       client = await MongoClient.connect(uri);
       const db = client.db('HeKhuyenNghi');
 
-      // Truy vấn dữ liệu từ MongoDB với userId và selectedSemester tương ứng
       const query = { userId };
       if (selectedSemester) {
         query['subjects.semester'] = selectedSemester;
@@ -30,7 +29,6 @@ export default async function handler(req, res) {
 
       let results = await db.collection('KhuyenNghi').find(query).toArray();
 
-      // Nhóm kết quả theo học kỳ
       let groupedResults = {};
       results.forEach(result => {
         result.subjects.forEach(subject => {
@@ -42,7 +40,6 @@ export default async function handler(req, res) {
         });
       });
 
-      // Sắp xếp kết quả trong mỗi học kỳ
       Object.keys(groupedResults).forEach(semester => {
         groupedResults[semester].sort((a, b) => {
           const semesterA = a.semester || 'N/A';
@@ -50,13 +47,12 @@ export default async function handler(req, res) {
           return semesterA.localeCompare(semesterB, undefined, { numeric: true, sensitivity: 'base' });
         });
 
-        // Cập nhật lại chỉ số STT của các môn học trong mỗi học kỳ
         groupedResults[semester].forEach((subject, index) => {
           subject.STT = index + 1;
         });
       });
 
-      console.log('Grouped Results from DB:', groupedResults); // Log dữ liệu để kiểm tra
+      console.log('Grouped Results from DB:', groupedResults);
       res.status(200).json(groupedResults);
     } catch (error) {
       console.error('Lỗi khi lấy dữ liệu từ cơ sở dữ liệu:', error);

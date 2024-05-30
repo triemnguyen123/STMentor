@@ -78,7 +78,7 @@ const MainPage = () => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    console.log('userId:', userId); // Kiểm tra giá trị của userId
+    console.log('userId:', userId); 
 
     const data = fields.reduce((acc: { subjects: { name: string, credits: number, score: number, semester: string }[] }, field, index) => {
       if (index % 2 === 0) {
@@ -103,7 +103,7 @@ const MainPage = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'user-id': userId || '', // Ensure userId is not null or undefined
+          'user-id': userId || '', 
         },
         body: JSON.stringify(data),
       });
@@ -137,7 +137,7 @@ const MainPage = () => {
         label: 'Các môn học :', 
         type: 'text', 
         value: '', 
-        semester: selectedSemester // Sử dụng học kỳ được chọn hiện tại
+        semester: selectedSemester 
       },
       { 
         id: `score${fields.length / 2}`, 
@@ -146,7 +146,7 @@ const MainPage = () => {
         min: '0', 
         max: '10', 
         value: '', 
-        semester: selectedSemester // Sử dụng học kỳ được chọn hiện tại
+        semester: selectedSemester 
       },
     ]);
   };
@@ -162,7 +162,7 @@ const MainPage = () => {
   
   const handleSemesterChange = (semester: string, index: number) => {
     const updatedFields = [...fields];
-    updatedFields[index] = { ...fields[index], semester }; // chỉ cập nhật học kỳ của môn học tại index
+    updatedFields[index] = { ...fields[index], semester }; 
     setFields(updatedFields);
   };
   
@@ -173,7 +173,7 @@ const MainPage = () => {
 
   const handleRemoveField = (index: number) => {
     const updatedFields = [...fields];
-    updatedFields.splice(index, 2); // Remove 2 fields, subjectName and score
+    updatedFields.splice(index, 2); 
     setFields(updatedFields);
   };
 
@@ -192,7 +192,7 @@ const MainPage = () => {
                       {index % 2 === 0 && 
                         <select
                           value={field.semester}
-                          onChange={(e) => handleSemesterChange(e.target.value, index)} // Pass both the selected value and the index
+                          onChange={(e) => handleSemesterChange(e.target.value, index)} 
                           className="border p-2 rounded-md mr-2"
                         >
                           <option value="HK1">HK1</option>

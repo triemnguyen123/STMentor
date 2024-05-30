@@ -7,7 +7,7 @@ export default async function handler(req, res) {
       res.status(500).json({ message: 'Không tìm thấy URI của MongoDB' });
       return;
     }
-    const userId = req.headers['user-id']; // Lấy userId từ header
+    const userId = req.headers['user-id']; 
     if (!userId) {
       res.status(400).json({ message: 'Thiếu userId' });
       return;
@@ -17,8 +17,8 @@ export default async function handler(req, res) {
     try {
       client = await MongoClient.connect(uri);
       const db = client.db('HeKhuyenNghi');
-      const newData = { ...req.body, userId }; // Gắn userId vào dữ liệu từ yêu cầu
-      // Thêm trường selectedSemester vào dữ liệu
+      const newData = { ...req.body, userId }; 
+
       newData.selectedSemester = req.body.selectedSemester;
   
       await db.collection('KhuyenNghi').insertOne(newData);
