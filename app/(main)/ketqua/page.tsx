@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/clerk-react'; // Sử dụng Clerk's useAuth hook để lấy thông tin người dùng
+import { useAuth } from '@clerk/clerk-react'; 
 import { Header } from './header';
 import { FeedWrapper } from '@/components/feed-wrapper';
 
@@ -14,26 +14,26 @@ interface Subject {
   semester: string;
 }
 
-interface Result {
-  subjects: Subject[];
+interface GroupedResults {
+  [semester: string]: Subject[];
 }
 
 const Ketqua = () => {
-  const [results, setResults] = useState<Result[]>([]);
+  const [groupedResults, setGroupedResults] = useState<GroupedResults>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { userId } = useAuth(); // Lấy userId từ Clerk's useAuth hook
+  const { userId } = useAuth(); 
 
   useEffect(() => {
     if (!userId) return;
 
     const fetchResults = async () => {
       setLoading(true);
-      setResults([]);
+      setGroupedResults({});
       try {
         const response = await fetch('/api/get-results', {
           headers: {
-            'user-id': userId, // Thêm userId vào header
+            'user-id': userId, 
           },
         });
         if (!response.ok) {
@@ -41,7 +41,7 @@ const Ketqua = () => {
         }
         const data = await response.json();
         console.log('Data from API:', data);
-        setResults(Array.isArray(data) ? data : []);
+        setGroupedResults(data);
       } catch (error: any) {
         setError(error.message);
       } finally {
@@ -60,15 +60,14 @@ const Ketqua = () => {
       <FeedWrapper>
         <Header title="Kết Quả" />
         <div className="mb-10">
-          {results.length === 0 ? (
+          {Object.keys(groupedResults).length === 0 ? (
             <p>Không có dữ liệu</p>
           ) : (
-            results.map((result, resultIndex) => (
-              <div key={resultIndex}>
+            Object.keys(groupedResults).map((semester, index) => (
+              <div key={index}>
                 <h3 className="font-bold text-lg mt-4 mb-2">
-  Học kỳ: {result.subjects && result.subjects.length > 0 ? result.subjects[0].semester : 'N/A'}
-</h3>
-
+                  Học kỳ: {semester}
+                </h3>
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead>
                     <tr>
@@ -87,15 +86,14 @@ const Ketqua = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                  {result.subjects && result.subjects.map((subject, subjectIndex) => (
-  <tr key={subjectIndex}>
-    <td className="px-6 py-4 whitespace-nowrap">{subject.STT}</td>
-    <td className="px-6 py-4 whitespace-nowrap">{subject.name || 'N/A'}</td>
-    <td className="px-6 py-4 whitespace-nowrap">{subject.score !== undefined ? subject.score : 'N/A'}</td>
-    <td className="px-6 py-4 whitespace-nowrap">{exists(subject.semester) ? subject.semester : 'N/A'}</td>
-  </tr>
-))}
-
+                    {groupedResults[semester].map((subject, subjectIndex) => (
+                      <tr key={subjectIndex}>
+                        <td className="px-6 py-4 whitespace-nowrap">{subject.STT}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{subject.name || 'N/A'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{subject.score !== undefined ? subject.score : 'N/A'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{exists(subject.semester) ? subject.semester : 'N/A'}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>

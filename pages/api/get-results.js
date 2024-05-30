@@ -30,22 +30,34 @@ export default async function handler(req, res) {
 
       let results = await db.collection('KhuyenNghi').find(query).toArray();
 
-      // Sắp xếp kết quả theo học kỳ
+      // Nhóm kết quả theo học kỳ
+      let groupedResults = {};
       results.forEach(result => {
-        result.subjects.sort((a, b) => {
+        result.subjects.forEach(subject => {
+          const semester = subject.semester || 'N/A';
+          if (!groupedResults[semester]) {
+            groupedResults[semester] = [];
+          }
+          groupedResults[semester].push(subject);
+        });
+      });
+
+      // Sắp xếp kết quả trong mỗi học kỳ
+      Object.keys(groupedResults).forEach(semester => {
+        groupedResults[semester].sort((a, b) => {
           const semesterA = a.semester || 'N/A';
           const semesterB = b.semester || 'N/A';
           return semesterA.localeCompare(semesterB, undefined, { numeric: true, sensitivity: 'base' });
         });
 
-        // Cập nhật lại chỉ số STT của các môn học trong mỗi kết quả
-        result.subjects.forEach((subject, index) => {
+        // Cập nhật lại chỉ số STT của các môn học trong mỗi học kỳ
+        groupedResults[semester].forEach((subject, index) => {
           subject.STT = index + 1;
         });
       });
 
-      console.log('Results from DB:', results); // Log dữ liệu để kiểm tra
-      res.status(200).json(results);
+      console.log('Grouped Results from DB:', groupedResults); // Log dữ liệu để kiểm tra
+      res.status(200).json(groupedResults);
     } catch (error) {
       console.error('Lỗi khi lấy dữ liệu từ cơ sở dữ liệu:', error);
       res.status(500).json({ message: 'Có lỗi xảy ra khi lấy dữ liệu từ cơ sở dữ liệu' });
