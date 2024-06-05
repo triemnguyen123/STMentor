@@ -1,7 +1,6 @@
 version: '3'
 services:
   web:
-    build:
-      context: .
+    image: graduate:latest 
     ports:
-      - "3000:3000"
+      - "3000:3000" 

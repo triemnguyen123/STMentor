@@ -1,27 +1,33 @@
+// components/sidebar.tsx
+
+'use client';
+
 import Link from "next/link";
+import { useUser } from '@clerk/nextjs';
+import { useEffect, useState } from 'react';
 import Image from "next/image";
-import {
-  ClerkLoading,
-  ClerkLoaded,
-  UserButton,
-} from "@clerk/nextjs";
-import { Loader } from "lucide-react";
-
-import { cn } from "@/lib/utils";
-
 import { SidebarItem } from "./sidebar-item";
+import { useRouter, SingletonRouter } from 'next/router'; // Import useRouter và SingletonRouter từ next/router
 
 type Props = {
   className?: string;
 };
 
 export const Sidebar = ({ className }: Props) => {
+  const { user } = useUser();
+  const [isMounted, setIsMounted] = useState(false);
+  const [router, setRouter] = useState<SingletonRouter | null>(null); // Kiểu của state router được cập nhật
+
+  const handleAdminClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (router) {
+      router.push('/admin');
+    }
+  };
+
   return (
-    <div className={cn(
-      "flex h-full lg:w-[280px] lg:fixed left-0 top-0 px-4 border-r-2 flex-col",
-      className,
-    )}>
-      <Link href="/mainpage">
+    <div className={`flex h-full lg:w-[280px] lg:fixed left-0 top-0 px-4 border-r-2 flex-col ${className}`}>
+      <Link href="/">
         <div className="pt-8 pl-4 pb-7 flex items-center gap-x-3">
           <Image src="/VLU_Logo.png" height={100} width={100} alt="VLU_Logo" />
           <h1 className="text-2xl font-extrabold text-red-600 tracking-wide">
@@ -29,7 +35,7 @@ export const Sidebar = ({ className }: Props) => {
           </h1>
         </div>
       </Link>
-      <div className="flex flex-col gap-y-2 flex-1 ">
+      <div className="flex flex-col gap-y-2 flex-1">
         <SidebarItem
           label="Hệ Khuyến Nghị"
           href="/mainpage"
@@ -45,15 +51,14 @@ export const Sidebar = ({ className }: Props) => {
           href="/ketqua"
           iconSrc="/diemso.png"
         />
+        {user?.id === 'user_2fzgFfIT9yHq49f6pMK2lJMUTJR' && ( // Kiểm tra quyền truy cập của user
+          <SidebarItem 
+            label="Quản trị viên"
+            href="/admin"
+            iconSrc="/admin.png"
+          />
+        )}
       </div>
-      {/* <div className="p-4"> // icon button user bên dưới sidebar
-        <ClerkLoading>
-          <Loader className="h-5 w-5 text-muted-foreground animate-spin" />
-        </ClerkLoading>
-        <ClerkLoaded>
-          <UserButton afterSignOutUrl="/" />
-        </ClerkLoaded>
-      </div> */}
     </div>
   );
 };
