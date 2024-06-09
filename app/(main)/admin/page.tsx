@@ -4,6 +4,8 @@ import { Header } from "./header";
 import { FeedWrapper } from "@/components/feed-wrapper";
 import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Admin = () => {
     const { user } = useUser();
@@ -12,7 +14,9 @@ const Admin = () => {
     const [programs, setPrograms] = useState<any[]>([]);
     const [checkedItems, setCheckedItems] = useState<{ [key: string]: boolean }>({});
     const [isPopupOpen, setIsPopupOpen] = useState(false);
+    const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
     const [formData, setFormData] = useState({ ma: '', ten: '', soTinChi: '' });
+    const [editFormData, setEditFormData] = useState({ id: '', ma: '', ten: '', soTinChi: '' });
 
     useEffect(() => {
         if (user) {
@@ -110,19 +114,76 @@ const Admin = () => {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
+        console.log("New value of formData.soTinChi:", value); // Kiểm tra giá trị mới của formData.soTinChi
         setFormData({ ...formData, [name]: value });
     };
+    
+
+    const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setEditFormData({ ...editFormData, [name]: value }); // Kiểm tra xem editFormData có được cập nhật đúng không
+    };
+    
+    
+
+    const validateInput = () => {
+        const specialCharPattern = /[~!@#%^&*_+={}|[\]\\:";'<>?,./]/;
+        if (specialCharPattern.test(formData.ma) || specialCharPattern.test(formData.ten)) {
+            alert("Mã học phần và Tên học phần không được chứa ký tự đặc biệt.");
+            return false;
+        }
+    
+        const soTinChi = parseInt(formData.soTinChi, 10);
+        if (!formData.soTinChi || isNaN(soTinChi) || soTinChi > 10 || soTinChi <= 0) {
+            alert("Số tín chỉ không phù hợp, vui lòng nhập lại!");
+            return false;
+        }
+    
+        return true;
+    };
+    
+    const validateInputEdit = () => {
+        const specialCharPattern = /[~!@#%^&*_+={}|[\]\\:";'<>?,./]/;
+        if (specialCharPattern.test(editFormData.ma) || specialCharPattern.test(editFormData.ten)) {
+            alert("Mã học phần và Tên học phần không được chứa ký tự đặc biệt.");
+            return false;
+        }
+    
+        const soTinChi = parseInt(editFormData.soTinChi, 10);
+        if (!editFormData.soTinChi || isNaN(soTinChi) || soTinChi > 10 || soTinChi <= 0) {
+            alert("Số tín chỉ không phù hợp, vui lòng nhập lại!");
+            return false;
+        }
+    
+        return true;
+    };
+    
+    
+    
 
     const handleAddProgram = async () => {
         if (!selectedUserId) {
-            alert("Please select a user first.");
+            alert("Vui lòng chọn User trước khi thêm môn học.");
+            return;
+        }
+
+        if (!validateInput()) {
+            return;
+        }
+
+        const { ma, ten, soTinChi } = formData;
+
+        // Kiểm tra nếu đã tồn tại mã học phần hoặc tên học phần
+        const existingProgram = programs.find(program => program['Mã học phần'] === ma || program['Tên học phần '] === ten);
+        if (existingProgram) {
+            alert('Mã học phần hoặc tên học phần đã tồn tại. Vui lòng nhập thông tin khác.');
             return;
         }
     
         const newProgram = {
-            'Mã học phần': formData.ma,
-            'Tên học phần ': formData.ten,
-            TC: formData.soTinChi,
+            'Mã học phần': ma,
+            'Tên học phần ': ten,
+            TC: soTinChi,
             isNew: true // Thêm thuộc tính isNew
         };
     
@@ -143,6 +204,17 @@ const Admin = () => {
             await fetchPrograms(selectedUserId);
             setIsPopupOpen(false);
             setFormData({ ma: '', ten: '', soTinChi: '' }); // Clear the form
+
+            // Hiển thị thông báo
+            toast.success('Bạn đã thêm môn học thành công', {
+                position: "top-right",
+                autoClose: 4000, // 4 giây
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
         } catch (error) {
             if (error instanceof Error) {
                 console.error('Failed to add program:', error);
@@ -153,7 +225,107 @@ const Admin = () => {
             }
         }
     };
+
+    const handleEditProgram = async () => {
+        if (!validateInputEdit()) {
+            return;
+        }
     
+        const { id, ma, ten, soTinChi } = editFormData;
+    
+        const updatedProgram = {
+            'Mã học phần': ma,
+            'Tên học phần ': ten,
+            TC: soTinChi
+        };
+    
+        try {
+            const res = await fetch('/api/update-program', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id, updatedProgram })
+            });
+    
+            if (!res.ok) {
+                throw new Error('Failed to update program');
+            }
+    
+            // Refresh the programs list
+            await fetchPrograms(selectedUserId);
+            setIsEditPopupOpen(false);
+    
+            // Hiển thị thông báo
+            toast.success('Bạn đã cập nhật môn học thành công.', {
+                position: "top-right",
+                autoClose: 4000, // 4 giây
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                console.error('Failed to delete program:', error);
+                alert('Failed to delete program: ' + error.message);
+            } else {
+                console.error('Failed to delete program:', error);
+                alert('Failed to delete program: ' + error);
+            }
+        }
+    };
+    
+    
+
+    const handleDeleteProgram = async (id: string) => {
+        try {
+            const res = await fetch('/api/delete-program', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id })
+            });
+
+            if (!res.ok) {
+                throw new Error('Failed to delete program');
+            }
+
+            // Refresh the programs list
+            await fetchPrograms(selectedUserId);
+
+            // Hiển thị thông báo
+            toast.success('Bạn đã xóa môn học thành công.', {
+                position: "top-right",
+                autoClose: 4000, // 4 giây
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                console.error('Failed to delete program:', error);
+                alert('Failed to delete program: ' + error.message);
+            } else {
+                console.error('Failed to delete program:', error);
+                alert('Failed to delete program: ' + error);
+            }
+        }
+    };
+
+    const openEditPopup = (program: any) => {
+        setEditFormData({
+            id: program._id,
+            ma: program['Mã học phần'],
+            ten: program['Tên học phần '],
+            soTinChi: program.TC
+        });
+        setIsEditPopupOpen(true);
+    };
 
     return (
         <div className="flex flex-row-reverse gap-12 px-6">
@@ -164,7 +336,7 @@ const Admin = () => {
                     <div className="mb-4">
                         <label htmlFor="user-select" className="block text-sm font-medium text-gray-700">Select User:</label>
                         <select id="user-select" value={selectedUserId} onChange={handleUserChange} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md">
-                        <option value="">Select a user</option>
+                            <option value="">Select a user</option>
                             {users.map((user) => (
                                 <option key={user.id} value={user.id}>{user.firstName} {user.lastName}</option>
                             ))}
@@ -181,6 +353,7 @@ const Admin = () => {
                                     <th className="border border-gray-300 px-4 py-2">Tên học phần</th>
                                     <th className="border border-gray-300 px-4 py-2">Số tín chỉ</th>
                                     <th className="border border-gray-300 px-4 py-2">Chọn</th>
+                                    <th className="border border-gray-300 px-4 py-2">Lựa chọn</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -195,6 +368,10 @@ const Admin = () => {
                                                 checked={checkedItems[program._id] || false}
                                                 onChange={() => handleCheckboxChange(program._id)}
                                             />
+                                        </td>
+                                        <td className="border border-gray-300 px-4 py-2">
+                                            <button onClick={() => openEditPopup(program)} className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">Sửa</button>
+                                            <button onClick={() => handleDeleteProgram(program._id)} className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded ml-2">Xóa</button>
                                         </td>
                                     </tr>
                                 ))}
@@ -225,9 +402,34 @@ const Admin = () => {
                         </div>
                     </div>
                 )}
+                {isEditPopupOpen && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+                        <div className="bg-white p-6 rounded-md shadow-md w-96">
+                            <h2 className="text-xl font-semibold mb-4">Sửa Môn Học</h2>
+                            <div className="mb-4">
+                                <label htmlFor="ma" className="block text-sm font-medium text-gray-700">Mã học phần</label>
+                                <input type="text" name="ma" value={editFormData.ma} onChange={handleEditInputChange} className="block w-full py-2 px-3 border border-gray-300 rounded focus:outline-none focus:border-indigo-500" />
+                            </div>
+                            <div className="mb-4">
+                                <label htmlFor="ten" className="block text-sm font-medium text-gray-700">Tên học phần</label>
+                                <input type="text" name="ten" value={editFormData.ten} onChange={handleEditInputChange} className="block w-full py-2 px-3 border border-gray-300 rounded focus:outline-none focus:border-indigo-500" />
+                            </div>
+                            <div className="mb-4">
+                                <label htmlFor="soTinChi" className="block text-sm font-medium text-gray-700">Số tín chỉ</label>
+                                <input type="text" name="soTinChi" value={editFormData.soTinChi} onChange={handleEditInputChange} className="block w-full py-2 px-3 border border-gray-300 rounded focus:outline-none focus:border-indigo-500" />
+                            </div>
+                            <div className="flex justify-end">
+                                <button onClick={handleEditProgram} className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">Cập nhật</button>
+                                <button onClick={() => setIsEditPopupOpen(false)} className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded ml-2">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </FeedWrapper>
+            <ToastContainer />
         </div>
     );
 };
 
 export default Admin;
+
