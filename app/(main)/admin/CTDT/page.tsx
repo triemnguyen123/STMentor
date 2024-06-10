@@ -7,7 +7,7 @@ import { useUser } from '@clerk/nextjs';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const Admin = () => {
+const adminCTDT = () => {
     const { user } = useUser();
     const [users, setUsers] = useState<any[]>([]);
     const [selectedUserId, setSelectedUserId] = useState<string>('');
@@ -431,5 +431,5 @@ const Admin = () => {
     );
 };
 
-export default Admin;
+export default adminCTDT;
 

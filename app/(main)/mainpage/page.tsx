@@ -11,51 +11,52 @@ import { useAuth } from '@clerk/clerk-react';
 
 const MainPage = () => {
   const { userId } = useAuth(); 
-
+  
   const subjects = {
     'Cơ sở ngành': [
-      { name: 'Kỹ thuật lập trình', credits: 3 },
-      { name: 'Lập trình hướng đối tượng', credits: 4 },
-      { name: 'Cấu trúc dữ liệu và giải thuật', credits: 3 },
-      { name: 'Cơ sở dữ liệu', credits: 3 },
-      { name: 'Nhập môn Mạng máy tính và điện toán đám mây', credits: 3 },
-      { name: 'Các nền tảng phát triển phần mềm', credits: 3 },
+      { id: 'subject1', name: 'Kỹ thuật lập trình', credits: 3 },
+      { id: 'subject2', name: 'Lập trình hướng đối tượng', credits: 4 },
+      { id: 'subject3', name: 'Cấu trúc dữ liệu và giải thuật', credits: 3 },
+      { id: 'subject4', name: 'Cơ sở dữ liệu', credits: 3 },
+      { id: 'subject5', name: 'Nhập môn Mạng máy tính và điện toán đám mây', credits: 3 },
+      { id: 'subject6', name: 'Các nền tảng phát triển phần mềm', credits: 3 },
     ],
     'Đại cương': [
-      { name: 'Toán cao cấp và ứng dụng', credits: 4 },
-      { name: 'Đại số tuyến tính và ứng dụng', credits: 3 },
-      { name: 'Vật lý đại cương 1', credits: 2 },
-      { name: 'Vật lý đại cương 2', credits: 2 },
-      { name: 'Toán rời rạc', credits: 4 },
-      { name: 'Nhập môn Công nghệ thông tin', credits: 3 },
-      { name: 'Cơ sở lập trình', credits: 3 },
+      { id: 'subject7', name: 'Toán cao cấp và ứng dụng', credits: 4 },
+      { id: 'subject8', name: 'Đại số tuyến tính và ứng dụng', credits: 3 },
+      { id: 'subject9', name: 'Vật lý đại cương 1', credits: 2 },
+      { id: 'subject10', name: 'Vật lý đại cương 2', credits: 2 },
+      { id: 'subject11', name: 'Toán rời rạc', credits: 4 },
+      { id: 'subject12', name: 'Nhập môn Công nghệ thông tin', credits: 3 },
+      { id: 'subject13', name: 'Cơ sở lập trình', credits: 3 },
     ],
     'Công nghệ phần mềm': [
-      { name: 'Nhập môn Công nghệ phần mềm', credits: 3 },
-      { name: 'Kỹ thuật lấy yêu cầu', credits: 3 },
-      { name: 'Kiểm thử phần mềm', credits: 3 },
-      { name: 'Phân tích và thiết kế hệ thống theo Hướng đối tượng', credits: 3 },
-      { name: 'Lập trình Web nâng cao', credits: 3 },
-      { name: 'Quản lý dự án phần mềm', credits: 3 },
+      { id: 'subject14', name: 'Nhập môn Công nghệ phần mềm', credits: 3 },
+      { id: 'subject15', name: 'Kỹ thuật lấy yêu cầu', credits: 3 },
+      { id: 'subject16', name: 'Kiểm thử phần mềm', credits: 3 },
+      { id: 'subject17', name: 'Phân tích và thiết kế hệ thống theo Hướng đối tượng', credits: 3 },
+      { id: 'subject18', name: 'Lập trình Web nâng cao', credits: 3 },
+      { id: 'subject19', name: 'Quản lý dự án phần mềm', credits: 3 },
     ],
     'Công nghệ dữ liệu': [
-      { name: 'Xác xuất thống kê ứng dụng', credits: 3 },
-      { name: 'Nhập môn Trí tuệ nhân tạo', credits: 3 },
-      { name: 'Nhập môn phân tích dữ liệu lớn', credits: 3 },
-      { name: 'Nhập môn học máy', credits: 3 },
-      { name: 'Các hệ hỗ trợ ra quyết định', credits: 3 },
-      { name: 'Số hóa và quản trị thông tin số', credits: 3 },
-      { name: 'Mã hóa và an toàn dữ liệu', credits: 3 },
+      { id: 'subject20', name: 'Xác xuất thống kê ứng dụng', credits: 3 },
+      { id: 'subject21', name: 'Nhập môn Trí tuệ nhân tạo', credits: 3 },
+      { id: 'subject22', name: 'Nhập môn phân tích dữ liệu lớn', credits: 3 },
+      { id: 'subject23', name: 'Nhập môn học máy', credits: 3 },
+      { id: 'subject24', name: 'Các hệ hỗ trợ ra quyết định', credits: 3 },
+      { id: 'subject25', name: 'Số hóa và quản trị thông tin số', credits: 3 },
+      { id: 'subject26', name: 'Mã hóa và an toàn dữ liệu', credits: 3 },
     ],
     'An ninh mạng máy tính và IoT': [
-      { name: 'Mạng máy tính nâng cao', credits: 3 },
-      { name: 'Quản trị Mạng', credits: 3 },
-      { name: 'An ninh Hạ tầng mạng', credits: 3 },
-      { name: 'An ninh Ứng dụng Web', credits: 3 },
-      { name: 'Lập trình Hệ thống nhúng và Internet vạn vật', credits: 3 },
-      { name: 'Mã hóa và an toàn dữ liệu', credits: 3 },
+      { id: 'subject27', name: 'Mạng máy tính nâng cao', credits: 3 },
+      { id: 'subject28', name: 'Quản trị Mạng', credits: 3 },
+      { id: 'subject29', name: 'An ninh Hạ tầng mạng', credits: 3 },
+      { id: 'subject30', name: 'An ninh Ứng dụng Web', credits: 3 },
+      { id: 'subject31', name: 'Lập trình Hệ thống nhúng và Internet vạn vật', credits: 3 },
+      { id: 'subject32', name: 'Mã hóa và an toàn dữ liệu', credits: 3 },
     ],
   };
+  
   type Field = {
     id: string;
     label: string;
@@ -78,20 +79,29 @@ const MainPage = () => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    console.log('userId:', userId); 
-
-    const data = fields.reduce((acc: { subjects: { name: string, credits: number, score: number, semester: string }[] }, field, index) => {
+    console.log('userId:', userId);
+  
+    const data = fields.reduce((acc, field, index) => {
       if (index % 2 === 0) {
-        const subjectField = field;
+        const subjectField = fields[index];
         const scoreField = fields[index + 1];
-        const selectedOption = (document.getElementById(subjectField.id) as HTMLSelectElement).selectedOptions[0];
-        const score = (document.getElementById(scoreField.id) as HTMLInputElement).value;
-        acc.subjects.push({ name: selectedOption.value, credits: parseInt(selectedOption.dataset.credits || '0'), score: parseFloat(score), semester: field.semester }); // Sử dụng học kỳ của môn học tại index
+        const selectedOption = document.querySelector(`#${subjectField.id} option[value="${subjectField.value}"]`) as HTMLOptionElement;
+        
+        if (subjectField && scoreField && selectedOption) { 
+          const subjectId = selectedOption.getAttribute('data-subject-id');
+          acc.subjects.push({
+            id: subjectId,
+            name: selectedOption.value,
+            credits: parseInt(selectedOption.getAttribute('data-credits') || '0'),
+            score: parseFloat(scoreField.value),
+            semester: field.semester
+          });
+        }
       }
       return acc;
-    }, { subjects: [] });
+    }, { subjects: [] } as { subjects: { id: string | null, name: string, credits: number, score: number, semester: string }[] });
   
-    const isValid = data.subjects.every(subject => subject.name && !isNaN(subject.score));
+    const isValid = data.subjects.every(subject => subject.id && subject.name && !isNaN(subject.score));
   
     if (!isValid) {
       setError('Vui lòng điền đầy đủ thông tin cho tất cả các trường');
@@ -103,11 +113,11 @@ const MainPage = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'user-id': userId || '', 
+          'user-id': userId || '',
         },
         body: JSON.stringify(data),
       });
-
+  
       if (response.ok) {
         alert('Dữ liệu đã được gửi thành công');
       } else {
@@ -126,9 +136,7 @@ const MainPage = () => {
     }
   };
   
-  
-  
- 
+
   const handleAddField = () => {
     setFields([
       ...fields,
@@ -165,12 +173,6 @@ const MainPage = () => {
     updatedFields[index] = { ...fields[index], semester }; 
     setFields(updatedFields);
   };
-  
-
-  
-  
-  
-
   const handleRemoveField = (index: number) => {
     const updatedFields = [...fields];
     updatedFields.splice(index, 2); 
@@ -201,23 +203,32 @@ const MainPage = () => {
                         </select>
                       }
                       <select
-                        id={field.id}
-                        name={field.id}
-                        className="border p-2 rounded-md"
-                        value={field.value}
-                        onChange={(e) => handleInputChange(field.id, e.target.value)}
+                          id={field.id}
+                          name={field.id}
+                          className="border p-2 rounded-md"
+                          value={field.value}
+                          onChange={(e) => handleInputChange(field.id, e.target.value)}
                       >
-                        <option value="" disabled hidden>Chọn môn học</option>
-                        {Object.entries(subjects).map(([category, subjects]) => (
-                          <optgroup key={category} label={category}>
-                            {subjects.map((subject, subIndex) => (
-                              <option key={`${category}-${subIndex}`} value={subject.name} data-credits={subject.credits}>
-                                {subject.name} - {subject.credits} TC
-                              </option>
-                            ))}
-                          </optgroup>
-                        ))}
+                          <option value="" disabled hidden>Chọn môn học</option>
+                          {Object.entries(subjects).map(([category, subjects]) => (
+                              <optgroup key={category} label={category}>
+                                  {subjects.map((subject, subIndex) => (
+                                      <option
+                                          key={`${category}-${subIndex}`}
+                                          value={subject.name}
+                                          data-credits={subject.credits}
+                                          data-subject-id={subject.id}
+                                      >
+                                          {subject.name} - {subject.credits} TC
+                                      </option>
+                                  ))}
+                              </optgroup>
+                          ))}
                       </select>
+
+
+
+
                     </>
                   ) : (
                     <input

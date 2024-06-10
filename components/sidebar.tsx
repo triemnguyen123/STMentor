@@ -7,7 +7,7 @@ import { useUser } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import Image from "next/image";
 import { SidebarItem } from "./sidebar-item";
-import { useRouter, SingletonRouter } from 'next/router'; // Import useRouter và SingletonRouter từ next/router
+import { useRouter, SingletonRouter } from 'next/router';
 
 type Props = {
   className?: string;
@@ -16,13 +16,12 @@ type Props = {
 export const Sidebar = ({ className }: Props) => {
   const { user } = useUser();
   const [isMounted, setIsMounted] = useState(false);
-  const [router, setRouter] = useState<SingletonRouter | null>(null); // Kiểu của state router được cập nhật
+  const [router, setRouter] = useState<SingletonRouter | null>(null); 
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const handleAdminClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (router) {
-      router.push('/admin');
-    }
+    setIsDropdownOpen(!isDropdownOpen);
   };
 
   return (
@@ -51,12 +50,38 @@ export const Sidebar = ({ className }: Props) => {
           href="/ketqua"
           iconSrc="/diemso.png"
         />
-        {user?.id === 'user_2fzgFfIT9yHq49f6pMK2lJMUTJR' && ( // Kiểm tra quyền truy cập của user
-          <SidebarItem 
-            label="Quản trị viên"
-            href="/admin"
-            iconSrc="/admin.png"
-          />
+        {user?.id === 'user_2fzgFfIT9yHq49f6pMK2lJMUTJR' && (
+          <div className="relative">
+            <SidebarItem 
+              label="Quản trị viên"
+              href="#"
+              iconSrc="/admin.png"
+              onClick={handleAdminClick}
+              className="text-lg" // Tăng kích thước chữ
+            />
+            {isDropdownOpen && (
+              <div className="absolute left-0 top-full mt-2 w-full bg-white shadow-lg border">
+                <SidebarItem 
+                  label="Quản lý CTDT"
+                  href="/admin/CTDT"
+                  iconSrc="/CTDT.png"
+                  className="flex items-center p-2 hover:bg-gray-100 text-lg" // Tăng kích thước chữ
+                />
+                <SidebarItem 
+                  label="Quản lý User"
+                  href="/admin/user"
+                  iconSrc="/user.png"
+                  className="flex items-center p-2 hover:bg-gray-100 text-lg" // Tăng kích thước chữ
+                />
+                <SidebarItem 
+                  label="Quản lý KQHT"
+                  href="/admin/KQHT"
+                  iconSrc="/KQHT.png"
+                  className="flex items-center p-2 hover:bg-gray-100 text-lg" // Tăng kích thước chữ
+                />
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>
