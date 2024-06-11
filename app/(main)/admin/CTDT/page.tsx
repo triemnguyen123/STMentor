@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Button } from "@/components/ui/button"; 
+
 
 const adminCTDT = () => {
     const { user } = useUser();
@@ -208,7 +210,7 @@ const adminCTDT = () => {
             // Hiển thị thông báo
             toast.success('Bạn đã thêm môn học thành công', {
                 position: "top-right",
-                autoClose: 4000, // 4 giây
+                autoClose: 1000, // 4 giây
                 hideProgressBar: false,
                 closeOnClick: true,
                 pauseOnHover: true,
@@ -259,7 +261,7 @@ const adminCTDT = () => {
             // Hiển thị thông báo
             toast.success('Bạn đã cập nhật môn học thành công.', {
                 position: "top-right",
-                autoClose: 4000, // 4 giây
+                autoClose: 1000, // 4 giây
                 hideProgressBar: false,
                 closeOnClick: true,
                 pauseOnHover: true,
@@ -342,7 +344,7 @@ const adminCTDT = () => {
                             ))}
                         </select>
                     </div>
-                    <button onClick={() => setIsPopupOpen(true)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Thêm Môn Học</button>
+                    <Button onClick={() => setIsPopupOpen(true)} variant="primary" className="py-2 px-4 rounded">Thêm Môn Học</Button>
                     {programs.length === 0 ? (
                         <p className="text-gray-600">No data available</p>
                     ) : (
@@ -370,8 +372,8 @@ const adminCTDT = () => {
                                             />
                                         </td>
                                         <td className="border border-gray-300 px-4 py-2">
-                                            <button onClick={() => openEditPopup(program)} className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">Sửa</button>
-                                            <button onClick={() => handleDeleteProgram(program._id)} className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded ml-2">Xóa</button>
+                                            <Button onClick={() => openEditPopup(program)} variant="yellow" className="py-1 px-2 rounded">Sửa</Button>
+                                            <Button onClick={() => handleDeleteProgram(program._id)} variant="danger" className="py-1 px-2 rounded ml-2">Xóa</Button>
                                         </td>
                                     </tr>
                                 ))}
@@ -396,8 +398,8 @@ const adminCTDT = () => {
                                 <input type="text" name="soTinChi" value={formData.soTinChi} onChange={handleInputChange} className="block w-full py-2 px-3 border border-gray-300 rounded focus:outline-none focus:border-indigo-500" />
                             </div>
                             <div className="flex justify-end">
-                                <button onClick={handleAddProgram} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Thêm</button>
-                                <button onClick={() => setIsPopupOpen(false)} className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded ml-2">Close</button>
+                                <Button onClick={handleAddProgram} variant="primary" className="font-bold py-2 px-4 rounded">Thêm</Button>
+                                <Button onClick={() => setIsPopupOpen(false)} variant="ghost" className="font-bold py-2 px-4 rounded ml-2">Close</Button>
                             </div>
                         </div>
                     </div>
@@ -419,8 +421,8 @@ const adminCTDT = () => {
                                 <input type="text" name="soTinChi" value={editFormData.soTinChi} onChange={handleEditInputChange} className="block w-full py-2 px-3 border border-gray-300 rounded focus:outline-none focus:border-indigo-500" />
                             </div>
                             <div className="flex justify-end">
-                                <button onClick={handleEditProgram} className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">Cập nhật</button>
-                                <button onClick={() => setIsEditPopupOpen(false)} className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded ml-2">Close</button>
+                                <Button onClick={handleEditProgram} variant="yellow" className="font-bold py-2 px-4 rounded">Cập nhật</Button>
+                                <Button onClick={() => setIsEditPopupOpen(false)} variant="ghost" className="font-bold py-2 px-4 rounded ml-2">Close</Button>
                             </div>
                         </div>
                     </div>

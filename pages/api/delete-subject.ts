@@ -1,39 +1,37 @@
-import { MongoClient, ObjectId } from 'mongodb';
 import { NextApiRequest, NextApiResponse } from 'next';
-
-const uri = process.env.MONGODB_URI || '';
+import connectMongo from '../../lib/mongodb';
+import Subject from '../../models/Subject';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    if (req.method === 'DELETE') {
-        const { id } = req.query;
+  if (req.method !== 'DELETE') {
+    return res.status(405).json({ message: 'Method Not Allowed' });
+  }
 
-        if (!id || typeof id !== 'string' || !isValidObjectId(id)) {
-            return res.status(400).json({ message: 'Subject ID is required and must be a valid 24 character hex string' });
-        }
+  const { id } = req.query;
 
-        const client = new MongoClient(uri);
+  if (!id) {
+    return res.status(400).json({ message: 'Subject ID is required' });
+  }
 
-        try {
-            await client.connect();
-            const database = client.db('HekhuyenNghi');
-            const collection = database.collection('KhuyenNghi');
+  try {
+    // Kết nối đến MongoDB
+    await connectMongo();
 
-            const result = await collection.deleteOne({ _id: new ObjectId(id) });
-            if (result.deletedCount === 0) {
-                throw new Error('Subject not found or could not be deleted');
-            }
-            res.status(200).json({ message: 'Subject deleted successfully' });
-        } catch (error: any) {
-            console.error('Error deleting subject:', error.message);
-            res.status(500).json({ message: 'Error deleting subject' });
-        } finally {
-            await client.close();
-        }
-    } else {
-        res.status(405).json({ message: 'Method not allowed' });
+    console.log(`Attempting to delete subject with ID ${id}`);
+
+    // Xóa môn học
+    const result = await Subject.deleteOne({ _id: id });
+
+    if (!result) {
+      console.log(`Subject with ID ${id} not found`);
+      return res.status(404).json({ message: 'Subject not found' });
     }
-}
 
-function isValidObjectId(id: string) {
-    return /^[0-9a-fA-F]{24}$/.test(id);
+    console.log(`Subject with ID ${id} deleted successfully`);
+
+    return res.status(200).json({ message: 'Subject deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting subject:', error);
+    return res.status(500).json({ message: 'Error deleting subject', error });
+  }
 }

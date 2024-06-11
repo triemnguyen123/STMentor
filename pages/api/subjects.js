@@ -1,25 +1,32 @@
-import connectMongo from '../../db';
-import Subject from '../../models/Subject';
+import { MongoClient } from 'mongodb';
 
 export default async function handler(req, res) {
-  await connectMongo();
+    const uri = process.env.MONGODB_URI;
+    if (!uri) {
+        res.status(500).json({ message: 'Không tìm thấy URI của MongoDB' });
+        return;
+    }
 
-  if (req.method === 'GET') {
+    let client;
+
     try {
-      const subjects = await Subject.find({});
-      res.status(200).json(subjects);
+        client = await MongoClient.connect(uri);
+        const db = client.db('HeKhuyenNghi');
+        const collection = db.collection('MonHoc');
+      
+        if (req.method === 'GET') {
+            const subjects = await collection.find({}).toArray();
+            console.log('Subjects from DB:', subjects); // Log để kiểm tra dữ liệu trước khi trả về
+            res.status(200).json(subjects);
+        } else {
+            res.status(405).json({ message: 'Phương thức không được phép' });
+        }
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch subjects' });
+        console.error('Lỗi khi lấy dữ liệu từ cơ sở dữ liệu:', error);
+        res.status(500).json({ message: 'Có lỗi xảy ra khi lấy dữ liệu từ cơ sở dữ liệu' });
+    } finally {
+        if (client) {
+            await client.close(); // Đóng kết nối MongoDB sau khi sử dụng
+        }
     }
-  } else if (req.method === 'POST') {
-    try {
-      const { subjects } = req.body;
-      const newSubjects = await Subject.insertMany(subjects);
-      res.status(201).json(newSubjects);
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to save subjects' });
-    }
-  } else {
-    res.status(405).json({ error: 'Method not allowed' });
-  }
 }

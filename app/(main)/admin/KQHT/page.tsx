@@ -5,13 +5,14 @@ import { Header } from './header';
 import { FeedWrapper } from '@/components/feed-wrapper';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Button } from "@/components/ui/button"; // Đường dẫn tới Button component
+import { Button } from "@/components/ui/button"; 
 
 const exists = (value: any) => value !== null && value !== undefined;
 
 interface Subject {
   STT: number;
   id: string;
+  _id: string; // Thêm thuộc tính _id vào interface
   name: string;
   score: number;
   semester: string;
@@ -49,6 +50,7 @@ const AdminKQHT = () => {
       setLoading(false);
     }
   };
+  
 
   useEffect(() => {
     if (!userId) return;
@@ -79,33 +81,42 @@ const AdminKQHT = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {    
-    try {
-        const res = await fetch(`/api/delete-subject`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ id })
-        });
-        if (!res.ok) {
-            throw new Error(`Failed to delete subject: ${await res.text()}`);
-        }
-        fetchResults();
-        toast.success('Đã xóa môn học thành công');
-    } catch (error) {
-        if (error instanceof Error) {
-            console.error('Failed to delete subject:', error.message);
-            toast.error(error.message);
-        } else {
-            console.error('Failed to delete subject:', error);
-            toast.error('Lỗi khi xóa môn học');
-        }
+  const handleDelete = async (id: string) => {
+    if (!id) {
+      console.error('Missing subject ID');
+      toast.error('Missing subject ID');
+      return;
     }
-};
-
   
-
+    try {
+      const res = await fetch(`/api/delete-subject?id=${id}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to delete subject: ${await res.text()}`);
+      }
+      // Tạo một bản sao mới của state groupedResults và cập nhật nó
+      setGroupedResults(prevState => {
+        const newState = { ...prevState };
+        // Xóa môn học khỏi newState dựa trên id
+        Object.keys(newState).forEach(semester => {
+          newState[semester] = newState[semester].filter(subject => subject._id !== id);
+        });
+        return newState;
+      });
+      toast.success('Đã xóa môn học thành công');
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('Failed to delete subject:', error.message);
+        toast.error('Lỗi khi xóa môn học');
+      } else {
+        console.error('Failed to delete subject:', error);
+        toast.error('Lỗi khi xóa môn học');
+      }
+    }
+  };
+  
+  
   const EditSubjectPopup = ({ subject, onClose, onSave }: any) => {
     const [name, setName] = useState(subject.name);
     const [score, setScore] = useState(subject.score);
@@ -213,8 +224,8 @@ const AdminKQHT = () => {
                         <td className="px-6 py-4 whitespace-nowrap">{exists(subject.semester) ? subject.semester : 'N/A'}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <Button variant="primary" size="sm" onClick={() => handleEdit(subject)}>Sửa</Button>
-                          <Button variant="danger" size="sm" onClick={() => handleDelete(subject.id)}>Xóa</Button>
-                        </td>
+                          <Button variant="danger" size="sm" onClick={() => handleDelete(subject._id)}>Xóa</Button>
+                          </td>
                       </tr>
                     ))}
                   </tbody>

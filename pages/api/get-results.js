@@ -1,4 +1,4 @@
-import { MongoClient } from 'mongodb';
+import { MongoClient, ObjectId } from 'mongodb';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
@@ -8,7 +8,7 @@ export default async function handler(req, res) {
       return;
     }
 
-    const userId = req.headers['user-id']; 
+    const userId = req.headers['user-id'];
     if (!userId) {
       res.status(400).json({ message: 'Thiếu userId' });
       return;
@@ -28,6 +28,15 @@ export default async function handler(req, res) {
       }
 
       let results = await db.collection('KhuyenNghi').find(query).toArray();
+
+      // Kiểm tra và chuyển đổi id thành ObjectId khi cần thiết
+      results.forEach(result => {
+        result.subjects.forEach(subject => {
+          if (typeof subject.id === 'string' && ObjectId.isValid(subject.id)) {
+            subject.id = new ObjectId(subject.id);
+          }
+        });
+      });
 
       let groupedResults = {};
       results.forEach(result => {
