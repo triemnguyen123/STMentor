@@ -20,6 +20,7 @@
     "@types/mongoose": "^5.11.97",
     "axios": "^1.7.2",
     "bootstrap": "^5.3.3",
+    "bson": "^6.7.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "cssnano": "^6.1.2",

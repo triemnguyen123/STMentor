@@ -1,7 +1,6 @@
 'use client';
-
 import { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/clerk-react'; 
+import { useAuth } from '@clerk/clerk-react';
 import { Header } from './header';
 import { FeedWrapper } from '@/components/feed-wrapper';
 
@@ -14,26 +13,21 @@ interface Subject {
   semester: string;
 }
 
-interface GroupedResults {
-  [semester: string]: Subject[];
-}
-
 const Ketqua = () => {
-  const [groupedResults, setGroupedResults] = useState<GroupedResults>({});
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { userId } = useAuth(); 
+  const { userId } = useAuth();
 
   useEffect(() => {
     if (!userId) return;
 
     const fetchResults = async () => {
       setLoading(true);
-      setGroupedResults({});
       try {
         const response = await fetch('/api/get-results', {
           headers: {
-            'user-id': userId, 
+            'user-id': userId,
           },
         });
         if (!response.ok) {
@@ -41,7 +35,7 @@ const Ketqua = () => {
         }
         const data = await response.json();
         console.log('Data from API:', data);
-        setGroupedResults(data);
+        setSubjects(data);
       } catch (error: any) {
         setError(error.message);
       } finally {
@@ -50,7 +44,7 @@ const Ketqua = () => {
     };
 
     fetchResults();
-  }, [userId]); 
+  }, [userId]);
 
   if (loading) return <div>Đang tải dữ liệu...</div>;
   if (error) return <div>{error}</div>;
@@ -60,44 +54,37 @@ const Ketqua = () => {
       <FeedWrapper>
         <Header title="Kết Quả" />
         <div className="mb-10">
-          {Object.keys(groupedResults).length === 0 ? (
+          {subjects.length === 0 ? (
             <p>Không có dữ liệu</p>
           ) : (
-            Object.keys(groupedResults).map((semester, index) => (
-              <div key={index}>
-                <h3 className="font-bold text-lg mt-4 mb-2">
-                  Học kỳ: {semester}
-                </h3>
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead>
-                    <tr>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        STT
-                      </th>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Tên môn học
-                      </th>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Điểm
-                      </th>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Học kỳ
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {groupedResults[semester].map((subject, subjectIndex) => (
-                      <tr key={subjectIndex}>
-                        <td className="px-6 py-4 whitespace-nowrap">{subject.STT}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{subject.name || 'N/A'}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{subject.score !== undefined ? subject.score : 'N/A'}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{exists(subject.semester) ? subject.semester : 'N/A'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ))
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead>
+                <tr>
+                  <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    STT
+                  </th>
+                  <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tên môn học
+                  </th>
+                  <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Điểm
+                  </th>
+                  <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Học kỳ
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {subjects.map((subject, index) => (
+                  <tr key={index}>
+                    <td className="px-6 py-4 whitespace-nowrap">{subject.STT}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{subject.name || 'N/A'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{subject.score !== undefined ? subject.score : 'N/A'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{exists(subject.semester) ? subject.semester : 'N/A'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
       </FeedWrapper>
