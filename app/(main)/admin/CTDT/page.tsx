@@ -210,7 +210,7 @@ const adminCTDT = () => {
             // Hiển thị thông báo
             toast.success('Bạn đã thêm môn học thành công', {
                 position: "top-right",
-                autoClose: 1000, // 4 giây
+                autoClose: 1000, 
                 hideProgressBar: false,
                 closeOnClick: true,
                 pauseOnHover: true,
@@ -261,7 +261,7 @@ const adminCTDT = () => {
             // Hiển thị thông báo
             toast.success('Bạn đã cập nhật môn học thành công.', {
                 position: "top-right",
-                autoClose: 1000, // 4 giây
+                autoClose: 1000, 
                 hideProgressBar: false,
                 closeOnClick: true,
                 pauseOnHover: true,
@@ -301,7 +301,7 @@ const adminCTDT = () => {
             // Hiển thị thông báo
             toast.success('Bạn đã xóa môn học thành công.', {
                 position: "top-right",
-                autoClose: 4000, // 4 giây
+                autoClose: 1000, 
                 hideProgressBar: false,
                 closeOnClick: true,
                 pauseOnHover: true,
@@ -331,107 +331,199 @@ const adminCTDT = () => {
 
     return (
         <div className="flex flex-row-reverse gap-12 px-6">
-            <FeedWrapper>
-                <Header title="Admin - Quản lý Chương Trình Đào Tạo" />
-                <div className="admin-container">
-                    <h2 className="text-3xl font-bold text-gray-800 mb-4">Admin Dashboard</h2>
-                    <div className="mb-4">
-                        <label htmlFor="user-select" className="block text-sm font-medium text-gray-700">Select User:</label>
-                        <select id="user-select" value={selectedUserId} onChange={handleUserChange} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md">
-                            <option value="">Select a user</option>
-                            {users.map((user) => (
-                                <option key={user.id} value={user.id}>{user.firstName} {user.lastName}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <Button onClick={() => setIsPopupOpen(true)} variant="primary" className="py-2 px-4 rounded">Thêm Môn Học</Button>
-                    {programs.length === 0 ? (
-                        <p className="text-gray-600">No data available</p>
-                    ) : (
-                        <table className="min-w-full border-collapse border border-gray-200">
-                            <thead>
-                                <tr>
-                                    <th className="border border-gray-300 px-4 py-2">Mã học phần</th>
-                                    <th className="border border-gray-300 px-4 py-2">Tên học phần</th>
-                                    <th className="border border-gray-300 px-4 py-2">Số tín chỉ</th>
-                                    <th className="border border-gray-300 px-4 py-2">Chọn</th>
-                                    <th className="border border-gray-300 px-4 py-2">Lựa chọn</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {programs.map((program) => (
-                                    <tr key={program._id} style={{ backgroundColor: checkedItems[program._id] ? 'lightgreen' : 'inherit', fontWeight: program.isNew ? 'bold' : 'normal' }}>
-                                        <td className="border border-gray-300 px-4 py-2">{program['Mã học phần']}</td>
-                                        <td className="border border-gray-300 px-4 py-2">{program['Tên học phần ']}</td>
-                                        <td className="border border-gray-300 px-4 py-2">{program.TC !== undefined ? program.TC : 'N/A'}</td>
-                                        <td className="border border-gray-300 px-4 py-2">
-                                            <input
-                                                type="checkbox"
-                                                checked={checkedItems[program._id] || false}
-                                                onChange={() => handleCheckboxChange(program._id)}
-                                            />
-                                        </td>
-                                        <td className="border border-gray-300 px-4 py-2">
-                                            <Button onClick={() => openEditPopup(program)} variant="yellow" className="py-1 px-2 rounded">Sửa</Button>
-                                            <Button onClick={() => handleDeleteProgram(program._id)} variant="danger" className="py-1 px-2 rounded ml-2">Xóa</Button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
+          <FeedWrapper>
+            <Header title="Admin - Quản lý Chương Trình Đào Tạo" />
+            <div className="admin-container">
+              <h2 className="text-3xl font-bold text-gray-800 mb-4">Admin Dashboard</h2>
+              <div className="mb-4">
+                <label htmlFor="user-select" className="block text-sm font-medium text-gray-700">Chọn Users:</label>
+                <select
+                  id="user-select"
+                  value={selectedUserId}
+                  onChange={handleUserChange}
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
+                >
+                  <option value="">Chọn một người dùng...</option>
+                  {users.map((user) => (
+                    <option key={user.id} value={user.id}>{user.firstName} {user.lastName}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Button
+                  onClick={() => setIsPopupOpen(true)}
+                  variant="default"
+                  className="py-2 px-4 bg-blue-500 hover:bg-blue-700 text-white font-bold rounded-full"
+                >
+                  Thêm Môn Học
+                </Button>
+              </div>
+              {programs.length === 0 ? (
+                <p className=" text-red-500 mt-4">Không có dữ liệu</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+                    <thead className="bg-indigo-600 text-white">
+                      <tr>
+                        <th className="border border-gray-300 py-2 px-4">Mã học phần</th>
+                        <th className="border border-gray-300 py-2 px-4">Tên học phần</th>
+                        <th className="border border-gray-300 py-2 px-4">Số tín chỉ</th>
+                        <th className="border border-gray-300 py-2 px-4">Chọn</th>
+                        <th className="border border-gray-300 py-2 px-4">Lựa chọn</th>
+                      </tr>
+                    </thead>
+                    <tbody >
+                      {programs.map((program) => (
+                        <tr 
+                          key={program._id}
+                          //className={checkedItems[program._id] ? 'bg-green-100' : ''  }
+                          className={`border-t ${checkedItems[program._id] ? 'bg-green-100' : ''} ${program.isNew ? 'bg-gray-50' : 'bg-white'}`}
+                          style={{ fontWeight: program.isNew ? 'bold' : 'normal' }}
+                        >
+                          <td className="border border-gray-300 px-4 py-2 ">{program['Mã học phần']}</td>
+                          <td className="border border-gray-300 px-4 py-2">{program['Tên học phần ']}</td>
+                          <td className="border border-gray-300 px-4 py-2">{program.TC !== undefined ? program.TC : 'N/A'}</td>
+                          <td className="border border-gray-300 px-4 py-2 text-center">
+                            <input
+                              type="checkbox"
+                              checked={checkedItems[program._id] || false}
+                              onChange={() => handleCheckboxChange(program._id)}
+                              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                            />
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2 text-center">
+                            <Button
+                              onClick={() => openEditPopup(program)}
+                              variant="default"
+                              className="py-1 px-2 bg-yellow-500 text-white hover:bg-yellow-700 mr-2"
+                            >
+                              Sửa
+                            </Button>
+                            <Button
+                              onClick={() => handleDeleteProgram(program._id)}
+                              variant="default"
+                              className="py-1 px-2 bg-red-500 text-white hover:bg-red-700"
+                            >
+                              Xóa
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-                {isPopupOpen && (
-                    <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-                        <div className="bg-white p-6 rounded-md shadow-md w-96">
-                            <h2 className="text-xl font-semibold mb-4">Thêm Môn Học</h2>
-                            <div className="mb-4">
-                                <label htmlFor="ma" className="block text-sm font-medium text-gray-700">Mã học phần</label>
-                                <input type="text" name="ma" value={formData.ma} onChange={handleInputChange} className="block w-full py-2 px-3 border border-gray-300 rounded focus:outline-none focus:border-indigo-500" />
-                            </div>
-                            <div className="mb-4">
-                                <label htmlFor="ten" className="block text-sm font-medium text-gray-700">Tên học phần</label>
-                                <input type="text" name="ten" value={formData.ten} onChange={handleInputChange} className="block w-full py-2 px-3 border border-gray-300 rounded focus:outline-none focus:border-indigo-500" />
-                            </div>
-                            <div className="mb-4">
-                                <label htmlFor="soTinChi" className="block text-sm font-medium text-gray-700">Số tín chỉ</label>
-                                <input type="text" name="soTinChi" value={formData.soTinChi} onChange={handleInputChange} className="block w-full py-2 px-3 border border-gray-300 rounded focus:outline-none focus:border-indigo-500" />
-                            </div>
-                            <div className="flex justify-end">
-                                <Button onClick={handleAddProgram} variant="primary" className="font-bold py-2 px-4 rounded">Thêm</Button>
-                                <Button onClick={() => setIsPopupOpen(false)} variant="ghost" className="font-bold py-2 px-4 rounded ml-2">Close</Button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                {isEditPopupOpen && (
-                    <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-                        <div className="bg-white p-6 rounded-md shadow-md w-96">
-                            <h2 className="text-xl font-semibold mb-4">Sửa Môn Học</h2>
-                            <div className="mb-4">
-                                <label htmlFor="ma" className="block text-sm font-medium text-gray-700">Mã học phần</label>
-                                <input type="text" name="ma" value={editFormData.ma} onChange={handleEditInputChange} className="block w-full py-2 px-3 border border-gray-300 rounded focus:outline-none focus:border-indigo-500" />
-                            </div>
-                            <div className="mb-4">
-                                <label htmlFor="ten" className="block text-sm font-medium text-gray-700">Tên học phần</label>
-                                <input type="text" name="ten" value={editFormData.ten} onChange={handleEditInputChange} className="block w-full py-2 px-3 border border-gray-300 rounded focus:outline-none focus:border-indigo-500" />
-                            </div>
-                            <div className="mb-4">
-                                <label htmlFor="soTinChi" className="block text-sm font-medium text-gray-700">Số tín chỉ</label>
-                                <input type="text" name="soTinChi" value={editFormData.soTinChi} onChange={handleEditInputChange} className="block w-full py-2 px-3 border border-gray-300 rounded focus:outline-none focus:border-indigo-500" />
-                            </div>
-                            <div className="flex justify-end">
-                                <Button onClick={handleEditProgram} variant="yellow" className="font-bold py-2 px-4 rounded">Cập nhật</Button>
-                                <Button onClick={() => setIsEditPopupOpen(false)} variant="ghost" className="font-bold py-2 px-4 rounded ml-2">Close</Button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </FeedWrapper>
-            <ToastContainer />
+              )}
+            </div>
+            {isPopupOpen && (
+              <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+                <div className="bg-white p-6 rounded-md shadow-md w-96">
+                  <h2 className="text-xl font-semibold mb-4">Thêm Môn Học</h2>
+                  <div className="mb-4">
+                    <label htmlFor="ma" className="block text-sm font-medium text-gray-700">Mã học phần</label>
+                    <input
+                      type="text"
+                      name="ma"
+                      value={formData.ma}
+                      onChange={handleInputChange}
+                      className="block w-full py-2 px-3 border border-gray-300 rounded focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label htmlFor="ten" className="block text-sm font-medium text-gray-700">Tên học phần</label>
+                    <input
+                      type="text"
+                      name="ten"
+                      value={formData.ten}
+                      onChange={handleInputChange}
+                      className="block w-full py-2 px-3 border border-gray-300 rounded focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label htmlFor="soTinChi" className="block text-sm font-medium text-gray-700">Số tín chỉ</label>
+                    <input
+                      type="text"
+                      name="soTinChi"
+                      value={formData.soTinChi}
+                      onChange={handleInputChange}
+                      className="block w-full py-2 px-3 border border-gray-300 rounded focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={handleAddProgram}
+                      variant="default"
+                      className="font-bold py-2 px-4 bg-blue-500 hover:bg-blue-700 text-white rounded-full"
+                    >
+                      Thêm
+                    </Button>
+                    <Button
+                      onClick={() => setIsPopupOpen(false)}
+                      variant="ghost"
+                      className="font-bold py-2 px-4 rounded-full ml-2"
+                    >
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {isEditPopupOpen && (
+              <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+                <div className="bg-white p-6 rounded-md shadow-md w-96">
+                  <h2 className="text-xl font-semibold mb-4">Sửa Môn Học</h2>
+                  <div className="mb-4">
+                    <label htmlFor="ma" className="block text-sm font-medium text-gray-700">Mã học phần</label>
+                    <input
+                      type="text"
+                      name="ma"
+                      value={editFormData.ma}
+                      onChange={handleEditInputChange}
+                      className="block w-full py-2 px-3 border border-gray-300 rounded focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label htmlFor="ten" className="block text-sm font-medium text-gray-700">Tên học phần</label>
+                    <input
+                      type="text"
+                      name="ten"
+                      value={editFormData.ten}
+                      onChange={handleEditInputChange}
+                      className="block w-full py-2 px-3 border border-gray-300 rounded focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label htmlFor="soTinChi" className="block text-sm font-medium text-gray-700">Số tín chỉ</label>
+                    <input
+                      type="text"
+                      name="soTinChi"
+                      value={editFormData.soTinChi}
+                      onChange={handleEditInputChange}
+                      className="block w-full py-2 px-3 border border-gray-300 rounded focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={handleEditProgram}
+                      variant="default"
+                      className="font-bold py-2 px-4 bg-yellow-500 hover:bg-yellow-700 text-white rounded-full"
+                    >
+                      Cập nhật
+                    </Button>
+                    <Button
+                      onClick={() => setIsEditPopupOpen(false)}
+                      variant="ghost"
+                      className="font-bold py-2 px-4 rounded-full ml-2"
+                    >
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </FeedWrapper>
+          <ToastContainer />
         </div>
-    );
-};
-
+      );
+    };
+    
 export default adminCTDT;
-

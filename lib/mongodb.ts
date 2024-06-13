@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import { MongoClient } from 'mongodb';
 
 const MONGODB_URI = process.env.MONGODB_URI || '';
 
@@ -6,35 +6,21 @@ if (!MONGODB_URI) {
   throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
 }
 
-interface MongooseCache {
-  conn: typeof mongoose | null;
-  promise: Promise<typeof mongoose> | null;
-}
-
-const globalAny: any = global;  // Sử dụng kiểu any tạm thời để tránh lỗi
-let cached: MongooseCache = globalAny.mongoose;
-
-if (!cached) {
-  cached = globalAny.mongoose = { conn: null, promise: null };
-}
+let cachedClient: MongoClient | null = null;
 
 async function connectMongo() {
-  if (cached.conn) {
-    return cached.conn;
+  if (cachedClient) {
+    return cachedClient;
   }
 
-  if (!cached.promise) {
-    const opts = {
-      bufferCommands: false,
-    };
-
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-      return mongoose;
-    });
+  try {
+    const client = await MongoClient.connect(MONGODB_URI);
+    cachedClient = client;
+    return client;
+  } catch (error) {
+    console.error('Error connecting to MongoDB:', error);
+    throw error;
   }
-
-  cached.conn = await cached.promise;
-  return cached.conn;
 }
 
 export default connectMongo;

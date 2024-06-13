@@ -1,3 +1,4 @@
+// pages/api/update-subject/[id].ts
 import { MongoClient, ObjectId } from 'mongodb';
 import { NextApiRequest, NextApiResponse } from 'next';
 
@@ -22,27 +23,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const updatedSubject = req.body;
 
-        // Kiểm tra xem dữ liệu môn học được gửi lên từ client-side có hợp lệ không
         if (!updatedSubject) {
             return res.status(400).json({ message: 'Updated subject data is missing' });
         }
 
-        // Cập nhật dữ liệu
         const result = await collection.updateOne(
-            { _id: new ObjectId(id) }, // Tìm kiếm bằng id
-            { $set: updatedSubject } // Cập nhật dữ liệu
+            { _id: new ObjectId(id) },
+            { $set: updatedSubject }
         );
 
         if (result.matchedCount === 0) {
             return res.status(404).json({ message: 'Subject not found' });
         }
 
-        // Truy vấn lại dữ liệu đã được cập nhật
         const updatedResult = await collection.findOne({ _id: new ObjectId(id) });
-
-        if (!updatedResult) {
-            return res.status(404).json({ message: 'Updated subject not found' });
-        }
 
         return res.status(200).json({ message: 'Subject updated successfully', updatedResult });
     } catch (error) {

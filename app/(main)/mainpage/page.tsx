@@ -5,11 +5,16 @@ import ErrorModal from './ErrorModal';
 import { Header } from './header';
 import { useAuth } from '@clerk/clerk-react';
 import React from 'react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { Button } from "@/components/ui/button"; 
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 const MainPage = () => {
   const { userId } = useAuth();
   const [subjects, setSubjects] = useState<{ name: string; credits: number; score: number; semester: string; userId: string | null; isChanged: boolean; _id: string; }[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,6 +36,8 @@ const MainPage = () => {
         setSubjects(initialSubjects);
       } catch (error) {
         console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
@@ -38,7 +45,6 @@ const MainPage = () => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    console.log('userId:', userId);
 
     const changedSubjects = subjects.filter(subject => subject.isChanged);
 
@@ -49,8 +55,6 @@ const MainPage = () => {
       semester: subject.semester,
       userId: userId || null,
     }));
-
-    console.log('Data being sent:', JSON.stringify(data, null, 2));
 
     try {
       const response = await fetch('/api/submit', {
@@ -63,7 +67,7 @@ const MainPage = () => {
       });
 
       if (response.ok) {
-        alert('Dữ liệu đã được gửi thành công');
+        toast.success('Dữ liệu đã được gửi thành công');
         setSubjects(subjects.map(subject => ({ ...subject, score: 0, isChanged: false }))); // Reset data
       } else {
         const errorData = await response.json();
@@ -95,60 +99,48 @@ const MainPage = () => {
   };
 
   return (
-    <div className="flex flex-col px-6">
+    <div className="relative flex flex-col px-6">
+      {loading && <LoadingSpinner />}
       <FeedWrapper>
         <Header title="Hệ Khuyến Nghị" />
-        <div className="mb-10 justify-center">
+        <div className="overflow-x-auto">
           <form onSubmit={handleSubmit}>
-            <table className="min-w-full bg-white">
+            <table className="min-w-full bg-white shadow-md rounded-lg">
               <thead>
-                <tr>
-                  <th className="py-2">STT</th>
-                  <th className="py-2">Tên môn học</th>
-                  <th className="py-2">Số tín chỉ</th>
-                  <th className="py-2">Điểm</th>
-                  <th className="py-2">Học kỳ</th>
+                <tr className="bg-indigo-600 text-gray-100 uppercase text-sm leading-normal">
+                  <th className="py-3 px-6 text-left">STT</th>
+                  <th className="py-3 px-6 text-left">Tên môn học</th>
+                  <th className="py-3 px-6 text-left">Số tín chỉ</th>
+                  <th className="py-3 px-6 text-left">Điểm</th>
+                  <th className="py-3 px-6 text-left">Học kỳ</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="text-gray-600 text-sm font-light">
                 {subjects.map((subject, index) => (
-                  <tr key={index} className="text-center">
-                    <td className="py-2">{index + 1}</td>
-                    <td className="py-2">
-                      <input
-                        type="text"
-                        placeholder="Tên môn học"
-                        className="border p-2 rounded-md"
-                        value={subject.name}
-                        onChange={(e) => handleInputChange('name', e.target.value, index)}
-                      />
+                  <tr key={index} className="border-b border-gray-100 hover:bg-gray-100">
+                    <td className="py-3 px-6 text-left whitespace-nowrap">{index + 1}</td>
+                    <td className="py-3 px-6 text-left">
+                      <span>{subject.name}</span>
                     </td>
-                    <td className="py-2">
-                      <input
-                        type="number"
-                        placeholder="Số tín chỉ"
-                        min="0"
-                        className="border p-2 rounded-md"
-                        value={subject.credits}
-                        onChange={(e) => handleInputChange('credits', parseInt(e.target.value), index)}
-                      />
+                    <td className="py-3 px-6 text-left">
+                      <span>{subject.credits}</span>
                     </td>
-                    <td className="py-2">
+                    <td className="py-3 px-6 text-left">
                       <input
                         type="number"
                         placeholder="Điểm"
                         min="0"
                         max="10"
-                        className="border p-2 rounded-md"
+                        className="border p-2 rounded-md w-full"
                         value={subject.score}
                         onChange={(e) => handleInputChange('score', parseFloat(e.target.value), index)}
                       />
                     </td>
-                    <td className="py-2">
+                    <td className="py-3 px-6 text-left">
                       <select
                         value={subject.semester}
                         onChange={(e) => handleSemesterChange(e.target.value, index)}
-                        className="border p-2 rounded-md"
+                        className="border p-2 rounded-md w-full"
                       >
                         <option value="HK1">HK1</option>
                         <option value="HK2">HK2</option>
@@ -160,12 +152,14 @@ const MainPage = () => {
               </tbody>
             </table>
             <div className="flex justify-center mt-10">
-              <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-md">Submit</button>
+              <Button type="submit" variant="default"
+               className="py-1 px-2 bg-yellow-500 text-white hover:bg-yellow-700 mr-2">Submit</Button>
             </div>
           </form>
         </div>
       </FeedWrapper>
       {error && <ErrorModal message={error} onClose={() => setError(null)} />}
+      <ToastContainer position="top-right" autoClose={1000} hideProgressBar={false} closeOnClick pauseOnHover draggable />
     </div>
   );
 };

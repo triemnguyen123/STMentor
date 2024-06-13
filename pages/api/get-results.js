@@ -20,17 +20,18 @@ export default async function handler(req, res) {
       client = await MongoClient.connect(uri);
       const db = client.db('HeKhuyenNghi');
 
-      const query = { userId };
+      const query = { userId: userId };
 
       const results = await db.collection('KhuyenNghi').find(query).toArray();
+      console.log('Data from database:', results);
 
       if (!results || results.length === 0) {
-        res.status(404).json({ message: 'Không tìm thấy dữ liệu phù hợp' });
+        res.status(200).json({ message: 'Không có dữ liệu phù hợp' });
         return;
       }
 
       const formattedResults = results.map(result => ({
-        _id: result._id,
+        _id: result._id.toString(), // Chuyển ObjectId thành chuỗi
         name: result.name,
         score: result.score,
         semester: result.semester
