@@ -336,7 +336,7 @@ const adminCTDT = () => {
         const file = fileInputRef.current.files[0];
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('collectionName', 'k26'); // Or 'k27', depending on your requirement
+        formData.append('collectionName', 'CTDT_CL'); // Or 'k27', depending on your requirement
     
         try {
           const res = await fetch('/api/import-csv', {
