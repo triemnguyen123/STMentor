@@ -10,9 +10,19 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Button } from "@/components/ui/button"; 
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
+// Add CSS styles directly
+const styleSheet = document.createElement("style");
+styleSheet.type = "text/css";
+styleSheet.innerText = `
+  .custom-tbody {
+    font-size: 1rem; /* Adjust this value as needed */
+  }
+`;
+document.head.appendChild(styleSheet);
+
 const MainPage = () => {
   const { userId } = useAuth();
-  const [subjects, setSubjects] = useState<{ name: string; credits: number; score: number; semester: string; userId: string | null; isChanged: boolean; _id: string; }[]>([]);
+  const [subjects, setSubjects] = useState<{ name: string; credits: number; score: number; semester: string; userId: string | null; isChanged: boolean; _id: string; category: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -24,14 +34,15 @@ const MainPage = () => {
           throw new Error('Failed to fetch data');
         }
         const data = await response.json();
-        const initialSubjects = data.map((subject: { _id: any; name: string; credits: number }) => ({
+        const initialSubjects = data.map((subject: { _id: any; name: string; credits: number; category: string }) => ({
           name: subject.name,
           credits: subject.credits,
           score: 0,
           semester: 'HK1',
           _id: subject._id,
           userId: userId || null,
-          isChanged: false
+          isChanged: false,
+          category: subject.category,
         }));
         setSubjects(initialSubjects);
       } catch (error) {
@@ -98,6 +109,14 @@ const MainPage = () => {
     setSubjects(updatedSubjects);
   };
 
+  const groupedSubjects = subjects.reduce((acc, subject) => {
+    if (!acc[subject.category]) {
+      acc[subject.category] = [];
+    }
+    acc[subject.category].push(subject);
+    return acc;
+  }, {} as { [key: string]: typeof subjects });
+
   return (
     <div className="relative flex flex-col px-6">
       {loading && <LoadingSpinner />}
@@ -105,55 +124,59 @@ const MainPage = () => {
         <Header title="Hệ Khuyến Nghị" />
         <div className="overflow-x-auto">
           <form onSubmit={handleSubmit}>
-            <table className="min-w-full bg-white shadow-md rounded-lg">
-              <thead>
-                <tr className="bg-indigo-600 text-gray-100 uppercase text-sm leading-normal">
-                  <th className="py-3 px-6 text-left">STT</th>
-                  <th className="py-3 px-6 text-left">Tên môn học</th>
-                  <th className="py-3 px-6 text-left">Số tín chỉ</th>
-                  <th className="py-3 px-6 text-left">Điểm</th>
-                  <th className="py-3 px-6 text-left">Học kỳ</th>
-                </tr>
-              </thead>
-              <tbody className="text-gray-600 text-sm font-light">
-                {subjects.map((subject, index) => (
-                  <tr key={index} className="border-b border-gray-100 hover:bg-gray-100">
-                    <td className="py-3 px-6 text-left whitespace-nowrap">{index + 1}</td>
-                    <td className="py-3 px-6 text-left">
-                      <span>{subject.name}</span>
-                    </td>
-                    <td className="py-3 px-6 text-left">
-                      <span>{subject.credits}</span>
-                    </td>
-                    <td className="py-3 px-6 text-left">
-                      <input
-                        type="number"
-                        placeholder="Điểm"
-                        min="0"
-                        max="10"
-                        className="border p-2 rounded-md w-full"
-                        value={subject.score}
-                        onChange={(e) => handleInputChange('score', parseFloat(e.target.value), index)}
-                      />
-                    </td>
-                    <td className="py-3 px-6 text-left">
-                      <select
-                        value={subject.semester}
-                        onChange={(e) => handleSemesterChange(e.target.value, index)}
-                        className="border p-2 rounded-md w-full"
-                      >
-                        <option value="HK1">HK1</option>
-                        <option value="HK2">HK2</option>
-                        <option value="HK3">HK3</option>
-                      </select>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {Object.keys(groupedSubjects).map(category => (
+              <div key={category} className="mb-6">
+                <h2 className="text-xl font-bold mb-4">{category}</h2>
+                <table className="min-w-full bg-white shadow-md rounded-lg">
+                  <thead>
+                    <tr className="bg-indigo-600 text-gray-100 uppercase text-sm leading-normal">
+                      <th className="py-3 px-6 text-left">STT</th>
+                      <th className="py-3 px-6 text-left">Tên môn học</th>
+                      <th className="py-3 px-6 text-left">Số tín chỉ</th>
+                      <th className="py-3 px-6 text-left">Điểm</th>
+                      <th className="py-3 px-6 text-left">Học kỳ</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-gray-600 text-sm font-light custom-tbody">
+                    {groupedSubjects[category].map((subject, index) => (
+                      <tr key={subject._id} className="border-b border-gray-100 hover:bg-gray-100">
+                        <td className="py-3 px-6 text-left whitespace-nowrap">{index + 1}</td>
+                        <td className="py-3 px-6 text-left">
+                          <span>{subject.name}</span>
+                        </td>
+                        <td className="py-3 px-6 text-left">
+                          <span>{subject.credits}</span>
+                        </td>
+                        <td className="py-3 px-6 text-left">
+                          <input
+                            type="number"
+                            placeholder="Điểm"
+                            min="0"
+                            max="10"
+                            className="border p-2 rounded-md w-full"
+                            value={subject.score}
+                            onChange={(e) => handleInputChange('score', parseFloat(e.target.value), subjects.indexOf(subject))}
+                          />
+                        </td>
+                        <td className="py-3 px-6 text-left">
+                          <select
+                            value={subject.semester}
+                            onChange={(e) => handleSemesterChange(e.target.value, subjects.indexOf(subject))}
+                            className="border p-2 rounded-md w-full"
+                          >
+                            <option value="HK1">HK1</option>
+                            <option value="HK2">HK2</option>
+                            <option value="HK3">HK3</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ))}
             <div className="flex justify-center mt-10">
-              <Button type="submit" variant="default"
-               className="py-1 px-2 bg-yellow-500 text-white hover:bg-yellow-700 mr-2">Submit</Button>
+              <Button type="submit" variant="default" className="py-1 px-2 bg-blue-500 text-white hover:bg-yellow-700 mr-2">Submit</Button>
             </div>
           </form>
         </div>

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { Header } from './header';
 import { FeedWrapper } from '@/components/feed-wrapper';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 const exists = (value: any) => value !== null && value !== undefined;
 
@@ -46,7 +47,7 @@ const Ketqua = () => {
     fetchResults();
   }, [userId]);
 
-  if (loading) return <div>Đang tải dữ liệu...</div>;
+  if (loading) return <LoadingSpinner />; 
   if (error) return <div>{error}</div>;
 
   const semesters = subjects.reduce((acc, subject) => {
@@ -65,6 +66,7 @@ const Ketqua = () => {
 
   return (
     <div className="flex flex-row-reverse gap-12 px-6">
+      {loading && <LoadingSpinner />}
       <FeedWrapper>
         <Header title="Kết Quả" />
         <div className="mb-10">

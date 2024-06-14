@@ -7,6 +7,7 @@ import { useUser } from '@clerk/nextjs';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Button } from "@/components/ui/button"; 
+import { useRef } from 'react';
 
 
 const adminCTDT = () => {
@@ -19,6 +20,7 @@ const adminCTDT = () => {
     const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
     const [formData, setFormData] = useState({ ma: '', ten: '', soTinChi: '' });
     const [editFormData, setEditFormData] = useState({ id: '', ma: '', ten: '', soTinChi: '' });
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (user) {
@@ -329,6 +331,47 @@ const adminCTDT = () => {
         setIsEditPopupOpen(true);
     };
 
+    const handleFileUpload = async () => {
+      if (fileInputRef.current && fileInputRef.current.files && fileInputRef.current.files.length > 0) {
+          const file = fileInputRef.current.files[0];
+          const formData = new FormData();
+          formData.append('file', file);
+
+          try {
+              const res = await fetch('/api/import-csv', {
+                  method: 'POST',
+                  body: formData,
+              });
+
+              if (!res.ok) {
+                  throw new Error('Failed to upload CSV');
+              }
+
+              toast.success('CSV data imported successfully', {
+                  position: "top-right",
+                  autoClose: 1000,
+                  hideProgressBar: false,
+                  closeOnClick: true,
+                  pauseOnHover: true,
+                  draggable: true,
+                  progress: undefined,
+              });
+
+              // Fetch programs again to refresh the list
+              await fetchPrograms(selectedUserId);
+          } catch (error: unknown) {
+              console.error('Failed to upload CSV:', error);
+              if (error instanceof Error) {
+                  alert('Failed to upload CSV: ' + error.message);
+              } else {
+                  alert('Failed to upload CSV: Unknown error');
+              }
+          }
+      } else {
+          alert('No file selected');
+      }
+  };
+
     return (
         <div className="flex flex-row-reverse gap-12 px-6">
           <FeedWrapper>
@@ -357,6 +400,18 @@ const adminCTDT = () => {
                 >
                   Thêm Môn Học
                 </Button>
+                 <input 
+                        type="file" 
+                        ref={fileInputRef}
+                        className="mt-2"
+                    />
+                    <Button
+                        onClick={handleFileUpload}
+                        variant="default"
+                        className="py-2 px-4 bg-green-500 hover:bg-green-700 text-white font-bold rounded-full mt-2"
+                    >
+                        Import CSV
+                    </Button>
               </div>
               {programs.length === 0 ? (
                 <p className=" text-red-500 mt-4">Không có dữ liệu</p>
@@ -376,8 +431,7 @@ const adminCTDT = () => {
                       {programs.map((program) => (
                         <tr 
                           key={program._id}
-                          //className={checkedItems[program._id] ? 'bg-green-100' : ''  }
-                          className={`border-t ${checkedItems[program._id] ? 'bg-green-100' : ''} ${program.isNew ? 'bg-gray-50' : 'bg-white'}`}
+                          className={checkedItems[program._id] ? 'bg-green-100' : ''  }
                           style={{ fontWeight: program.isNew ? 'bold' : 'normal' }}
                         >
                           <td className="border border-gray-300 px-4 py-2 ">{program['Mã học phần']}</td>

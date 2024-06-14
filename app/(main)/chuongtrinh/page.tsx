@@ -4,6 +4,7 @@ import { Header } from "./header";
 import { FeedWrapper } from "@/components/feed-wrapper";
 import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 const ChuongTrinh = () => {
     const { user } = useUser();
@@ -11,6 +12,7 @@ const ChuongTrinh = () => {
     const [checkedItems, setCheckedItems] = useState<{ [key: string]: boolean }>({});
     const [courses, setCourses] = useState<any[]>([]);
     const [selectedCourse, setSelectedCourse] = useState<string>('');
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (user) {
@@ -21,6 +23,8 @@ const ChuongTrinh = () => {
                         throw new Error('Failed to fetch programs');
                     }
                     const data = await res.json();
+
+                    data.sort((a: Record<string, any>, b: Record<string, any>) => a['Mã học phần'].localeCompare(b['Mã học phần']));
                     const programsWithNATitle = data.map((program: any) => ({
                         ...program,
                         TenHocPhan: program['Tên học phần '] || 'N/A'
@@ -61,6 +65,13 @@ const ChuongTrinh = () => {
                     console.error('Failed to fetch courses:', error);
                 }
             };
+            const fetchData = async () => {
+                setLoading(true);
+                await Promise.all([fetchPrograms(), loadCheckboxes(), fetchCourses()]);
+                setLoading(false);
+            };
+
+            fetchData();
 
             fetchPrograms();
             loadCheckboxes();
@@ -94,6 +105,7 @@ const ChuongTrinh = () => {
         setSelectedCourse(event.target.value);
         // Fetch or filter programs based on the selected course if needed
     };
+    if (loading) return <LoadingSpinner />; // Hiển thị loading spinner khi đang tải dữ liệu
 
     return (
         <div className="flex flex-row-reverse gap-12 px-6">

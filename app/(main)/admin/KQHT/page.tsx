@@ -5,7 +5,7 @@ import { Header } from './header';
 import { FeedWrapper } from '@/components/feed-wrapper';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Button } from "@/components/ui/button"; 
+import { Button } from "@/components/ui/button";
 
 interface Subject {
   _id: string;
@@ -26,14 +26,14 @@ const AdminKQHT = () => {
 
   const fetchResults = async () => {
     setLoading(true);
-    setError(null); // Reset error state before fetching
+    setError(null);
     try {
       const response = await fetch(`/api/get-results`, {
         headers: {
           'user-id': selectedUserId as string,
         },
       });
-      
+
       if (!response.ok) {
         throw new Error('Lỗi khi lấy dữ liệu');
       }
@@ -90,49 +90,65 @@ const AdminKQHT = () => {
   };
 
   const handleSaveEdit = async (updatedSubject: Subject) => {
-      try {
-          const { _id, name, score, semester } = updatedSubject;
-  
-          const updatedData = {
-              name,
-              score,
-              semester
-          };
-  
-          const res = await fetch(`/api/update-subject?id=${_id}`, {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(updatedData),
-          });
-  
-          if (!res.ok) {
-              throw new Error('Failed to update subject');
-          }
-  
-          setSelectedSubject(null);
-  
-          // Update the local state with the new data
-          setSubjects((prevSubjects) =>
-              prevSubjects.map((subject) =>
-                  subject._id === _id ? { ...subject, ...updatedData } : subject
-              )
-          );
-  
-          toast.success('Đã cập nhật thông tin môn học thành công', {
-              position: "top-right",
-              autoClose: 1000,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              progress: undefined,
-          });
-      } catch (error) {
-          console.error('Failed to update subject:', error);
-          toast.error('Lỗi khi cập nhật thông tin môn học');
-      }
+    try {
+        const { _id, name, score, semester } = updatedSubject;
+
+        // Validation
+        const validNameRegex = /^[\p{L}0-9\s]+$/u;  // Cho phép chữ cái Unicode, số và khoảng trắng
+        const validSemesterRegex = /^[\p{L}0-9\s]+$/u;  // Cho phép chữ cái Unicode, số và khoảng trắng
+
+        if (!name || !validNameRegex.test(name.trim())) {
+            toast.error('Tên môn học không hợp lệ. Vui lòng nhập lại.');
+            return;
+        }
+        if (isNaN(score) || score < 0 || score > 10) {
+            toast.error('Điểm phải nằm trong khoảng từ 0 đến 10.');
+            return;
+        }
+        if (!semester || !validSemesterRegex.test(semester.trim())) {
+            toast.error('Học kỳ không hợp lệ. Vui lòng nhập lại.');
+            return;
+        }
+
+        const updatedData = {
+            name,
+            score,
+            semester,
+        };
+
+        const res = await fetch(`/api/update-subject?id=${_id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updatedData),
+        });
+
+        if (!res.ok) {
+            throw new Error('Failed to update subject');
+        }
+
+        setSelectedSubject(null);
+
+        setSubjects((prevSubjects) =>
+            prevSubjects.map((subject) =>
+                subject._id === _id ? { ...subject, ...updatedData } : subject
+            )
+        );
+
+        toast.success('Đã cập nhật thông tin môn học thành công', {
+            position: "top-right",
+            autoClose: 1000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+        });
+    } catch (error) {
+        console.error('Failed to update subject:', error);
+        toast.error('Lỗi khi cập nhật thông tin môn học');
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -162,67 +178,27 @@ const AdminKQHT = () => {
     setSelectedUserId(newUserId);
   };
 
-  const EditSubjectPopup = ({ subject, onClose, onSave }: any) => {
-    const [name, setName] = useState(subject.name);
-    const [score, setScore] = useState(subject.score);
-    const [semester, setSemester] = useState(subject.semester);
-    const [validationErrors, setValidationErrors] = useState<any>({});
-
-
-    const handleSave = () => {
-      if (validateForm()) {
-        onSave({ ...subject, name, score, semester });
-        onClose();
+  const groupedSubjects = Object.entries(
+    subjects.reduce((groups, subject) => {
+      const semester = subject.semester;
+      if (!groups[semester]) {
+        groups[semester] = [];
       }
-    };
-    const validateForm = () => {
-      const errors: any = {};
-
-      // Validate name and semester to not contain special characters
-      const specialCharPattern = /[!@#$%^&*(),.?":{}|<>]/g;
-      if (specialCharPattern.test(name)) {
-        errors.name = 'Tên môn học không được chứa ký tự đặc biệt';
-      }
-      if (specialCharPattern.test(semester)) {
-        errors.semester = 'Học kỳ không được chứa ký tự đặc biệt';
-      }
-
-      // Validate score to be between 0 and 10
-      if (score < 0 || score > 10) {
-        errors.score = 'Điểm phải từ 0 đến 10';
-      }
-
-      setValidationErrors(errors);
-      return Object.keys(errors).length === 0;
-    };
-
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
-        <div className="bg-white p-6 rounded shadow-lg w-96">
-          <h3 className="text-lg font-bold mb-4">Sửa thông tin môn học</h3>
-          <div className="mb-4">
-            <label className="block mb-1">Tên môn học</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full border px-2 py-1" />
-          </div>
-          <div className="mb-4">
-            <label className="block mb-1">Điểm</label>
-            <input type="number" value={score} onChange={(e) => setScore(parseFloat(e.target.value))} className="w-full border px-2 py-1" />
-          </div>
-          <div className="mb-4">
-            <label className="block mb-1">Học kỳ</label>
-            <input type="text" value={semester} onChange={(e) => setSemester(e.target.value)} className="w-full border px-2 py-1" />
-          </div>
-          <div className="flex justify-end">
-            <Button onClick={handleSave} className="mr-2 bg-blue-500 text-white hover:bg-blue-700">Lưu</Button>
-            <Button onClick={onClose} className="bg-red-500 text-white hover:bg-red-700">Đóng</Button>
-          </div>
-        </div>
-      </div>
-    );
-  };
+      groups[semester].push(subject);
+      return groups;
+    }, {} as { [key: string]: Subject[] })
+  )
+    .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true })) // Sắp xếp các học kỳ theo thứ tự tự nhiên
+    .map(([semester, subjects]) => ({
+      semester,
+      subjects: subjects.map((subject, index) => ({
+        ...subject,
+        STT: index + 1,
+      })),
+    }));
 
   return (
-    <div className="min-h-screen   ">
+    <div className="min-h-screen">
       <Header title={'Admin - Quản lý kết quả học tập'} />
       <FeedWrapper>
         <div className="user-select-container mb-4 px-4">
@@ -239,35 +215,39 @@ const AdminKQHT = () => {
             ))}
           </select>
         </div>
+
         {loading && <p className="text-center text-gray-500">Đang tải dữ liệu...</p>}
         {error && <p className="text-center text-red-500">Có lỗi xảy ra: {error}</p>}
         {!loading && !error && (
           <div className="overflow-x-auto px-4">
-            <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
-              <thead className="bg-indigo-600 text-white">
-                <tr>
-                  <th className="border border-gray-300 py-2 px-4">STT</th>
-                  <th className="border border-gray-300 py-2 px-4">Tên môn học</th>
-                  <th className="border border-gray-300 py-2 px-4">Điểm</th>
-                  <th className="border border-gray-300 py-2 px-4">Học kỳ</th>
-                  <th className="border border-gray-300 py-2 px-4">Lựa chọn</th>
-                </tr>
-              </thead>
-              <tbody>
-                {subjects.map((subject, index) => (
-                  <tr key={subject._id} className={`border-t ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
-                    <td className="border border-gray-300 py-2 px-4 text-center">{subject.STT}</td>
-                    <td className="border border-gray-300 py-2 px-4 text-center">{subject.name}</td>
-                    <td className="border border-gray-300 py-2 px-4 text-center">{subject.score}</td>
-                    <td className="border border-gray-300 py-2 px-4 text-center">{subject.semester}</td>
-                    <td className="border border-gray-300 py-2 px-4 text-center">
-                      <Button onClick={() => handleEdit(subject)} className="bg-yellow-500 text-white hover:bg-yellow-700 mr-2">Sửa</Button>
-                      <Button onClick={() => handleDelete(subject._id)} className="bg-red-500 text-white hover:bg-red-700">Xóa</Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {groupedSubjects.map(({ semester, subjects }) => (
+              <div key={semester} className="mb-8">
+                <h2 className="text-xl font-bold mb-4">Học kỳ: {semester}</h2>
+                <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+                  <thead className="bg-indigo-600 text-white">
+                    <tr>
+                      <th className="border border-gray-300 py-2 px-4">STT</th>
+                      <th className="border border-gray-300 py-2 px-4">Tên môn học</th>
+                      <th className="border border-gray-300 py-2 px-4">Điểm</th>
+                      <th className="border border-gray-300 py-2 px-4">Lựa chọn</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {subjects.map((subject) => (
+                      <tr key={subject._id} className={`border-t ${subject.STT % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                        <td className="border border-gray-300 py-2 px-4 text-center">{subject.STT}</td>
+                        <td className="border border-gray-300 py-2 px-4 text-center">{subject.name}</td>
+                        <td className="border border-gray-300 py-2 px-4 text-center">{subject.score}</td>
+                        <td className="border border-gray-300 py-2 px-4 text-center">
+                          <Button onClick={() => handleEdit(subject)} className="bg-yellow-500 text-white hover:bg-yellow-700 mr-2">Sửa</Button>
+                          <Button onClick={() => handleDelete(subject._id)} className="bg-red-500 text-white hover:bg-red-700">Xóa</Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ))}
           </div>
         )}
         {selectedSubject && (
@@ -279,6 +259,47 @@ const AdminKQHT = () => {
         )}
       </FeedWrapper>
       <ToastContainer />
+    </div>
+  );
+};
+
+interface EditSubjectPopupProps {
+  subject: Subject;
+  onClose: () => void;
+  onSave: (updatedSubject: Subject) => void;
+}
+
+const EditSubjectPopup: React.FC<EditSubjectPopupProps> = ({ subject, onClose, onSave }) => {
+  const [name, setName] = useState(subject.name);
+  const [score, setScore] = useState(subject.score);
+  const [semester, setSemester] = useState(subject.semester);
+
+  const handleSave = () => {
+    onSave({ ...subject, name, score, semester });
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+      <div className="bg-white p-6 rounded shadow-lg w-96">
+        <h3 className="text-lg font-bold mb-4">Sửa thông tin môn học</h3>
+        <div className="mb-4">
+          <label className="block mb-1">Tên môn học</label>
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full border px-2 py-1" />
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1">Điểm</label>
+          <input type="number" value={score} onChange={(e) => setScore(parseFloat(e.target.value))} className="w-full border px-2 py-1" />
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1">Học kỳ</label>
+          <input type="text" value={semester} onChange={(e) => setSemester(e.target.value)} className="w-full border px-2 py-1" />
+        </div>
+
+        <div className="flex justify-end">
+          <Button onClick={handleSave} className="mr-2 bg-blue-500 text-white hover:bg-blue-700">Lưu</Button>
+          <Button onClick={onClose} className="bg-red-500 text-white hover:bg-red-700">Đóng</Button>
+        </div>
+      </div>
     </div>
   );
 };
