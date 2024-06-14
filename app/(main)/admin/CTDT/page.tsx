@@ -333,44 +333,46 @@ const adminCTDT = () => {
 
     const handleFileUpload = async () => {
       if (fileInputRef.current && fileInputRef.current.files && fileInputRef.current.files.length > 0) {
-          const file = fileInputRef.current.files[0];
-          const formData = new FormData();
-          formData.append('file', file);
-
-          try {
-              const res = await fetch('/api/import-csv', {
-                  method: 'POST',
-                  body: formData,
-              });
-
-              if (!res.ok) {
-                  throw new Error('Failed to upload CSV');
-              }
-
-              toast.success('CSV data imported successfully', {
-                  position: "top-right",
-                  autoClose: 1000,
-                  hideProgressBar: false,
-                  closeOnClick: true,
-                  pauseOnHover: true,
-                  draggable: true,
-                  progress: undefined,
-              });
-
-              // Fetch programs again to refresh the list
-              await fetchPrograms(selectedUserId);
-          } catch (error: unknown) {
-              console.error('Failed to upload CSV:', error);
-              if (error instanceof Error) {
-                  alert('Failed to upload CSV: ' + error.message);
-              } else {
-                  alert('Failed to upload CSV: Unknown error');
-              }
+        const file = fileInputRef.current.files[0];
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('collectionName', 'k26'); // Or 'k27', depending on your requirement
+    
+        try {
+          const res = await fetch('/api/import-csv', {
+            method: 'POST',
+            body: formData,
+          });
+    
+          if (!res.ok) {
+            throw new Error('Failed to upload CSV');
           }
+    
+          toast.success('CSV data imported successfully', {
+            position: "top-right",
+            autoClose: 1000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+    
+          // Fetch programs again to refresh the list
+          await fetchPrograms(selectedUserId);
+        } catch (error: unknown) {
+          console.error('Failed to upload CSV:', error);
+          if (error instanceof Error) {
+            alert('Failed to upload CSV: ' + error.message);
+          } else {
+            alert('Failed to upload CSV: Unknown error');
+          }
+        }
       } else {
-          alert('No file selected');
+        alert('No file selected');
       }
-  };
+    };
+    
 
     return (
         <div className="flex flex-row-reverse gap-12 px-6">

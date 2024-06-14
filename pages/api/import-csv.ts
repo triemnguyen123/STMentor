@@ -1,61 +1,54 @@
-// // pages/api/import-csv.ts
-// import { NextApiRequest, NextApiResponse } from 'next';
-// import multer from 'multer';
-// import nextConnect from 'next-connect';
-// import csv from 'csv-parser';
-// import { MongoClient } from 'mongodb';
-// import streamifier from 'streamifier';
+import { NextApiRequest, NextApiResponse } from 'next';
+import { MongoClient } from 'mongodb';
+import formidable, { Fields, Files, File } from 'formidable';
+import fs from 'fs';
+import csv from 'csv-parser';
 
-// const upload = multer({ storage: multer.memoryStorage() });
+const uri = process.env.MONGODB_URI || '';
+const client = new MongoClient(uri);
 
-// const apiRoute = nextConnect({
-//   onError(error: unknown, req: NextApiRequest, res: NextApiResponse) {
-//     console.log('Error occurred:', error);
-//     res.status(501).json({ error: `Sorry something Happened! ${error.message}` });
-//   },
-//   onNoMatch(req, res) {
-//     res.status(405).json({ error: `Method '${req.method}' Not Allowed` });
-//   },
-// });
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
-// apiRoute.use(upload.single('file'));
+const importCSV = async (req: NextApiRequest, res: NextApiResponse) => {
+  if (req.method === 'POST') {
+    const form = formidable();
 
-// apiRoute.post(async (req: NextApiRequest, res: NextApiResponse) => {
-//   console.log('Post request received');
-//   const client = new MongoClient(process.env.MONGODB_URI);
-//   await client.connect();
-//   const db = client.db();
-//   const collection = db.collection('programs');
-  
-//   const results: any[] = [];
-//   const buffer = req.file.buffer;
+    form.parse(req, async (err: any, fields: Fields, files: Files) => {
+      if (err) {
+        res.status(500).json({ message: 'Error parsing the file' });
+        return;
+      }
 
-//   console.log('Buffer obtained:', buffer);
-  
-//   streamifier.createReadStream(buffer)
-//     .pipe(csv())
-//     .on('data', (data) => {
-//       console.log('Data parsed:', data);
-//       results.push(data);
-//     })
-//     .on('end', async () => {
-//       console.log('Stream ended');
-//       try {
-//         await collection.insertMany(results);
-//         res.status(200).json({ message: 'CSV data imported successfully' });
-//       } catch (error) {
-//         console.error('Failed to import data:', error);
-//         res.status(500).json({ error: `Failed to import data: ${error.message}` });
-//       } finally {
-//         await client.close();
-//       }
-//     });
-// });
+      const fileArray: File[] = Array.isArray(files.file) && files.file ? files.file as File[] : [];
+      if (fileArray.length === 0 || !fileArray[0]?.filepath) {
+        res.status(400).json({ message: 'No file uploaded' });
+        return;
+      }
 
-// export default apiRoute;
+      const filePath = fileArray[0].filepath;
+      const collectionName = Array.isArray(fields.collectionName) ? fields.collectionName[0] : fields.collectionName || 'CTDT_CL'; // default to k26 if not specified
 
-// export const config = {
-//   api: {
-//     bodyParser: false,
-//   },
-// };
+      fs.createReadStream(filePath)
+        .pipe(csv())
+        .on('data', async (data) => {
+          try {
+            await client.db('CTDT_DB').collection(collectionName).insertOne(data);
+          } catch (err) {
+            console.error('Error inserting data:', err);
+          }
+        })
+        .on('end', () => {
+          fs.unlinkSync(filePath); // Delete the file after processing
+          res.status(200).json({ message: 'CSV data imported successfully' });
+        });
+    });
+  } else {
+    res.status(405).json({ message: 'Method not allowed' });
+  }
+};
+
+export default importCSV;

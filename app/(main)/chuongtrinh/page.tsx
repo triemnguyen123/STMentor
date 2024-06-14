@@ -10,7 +10,7 @@ const ChuongTrinh = () => {
     const { user } = useUser();
     const [programs, setPrograms] = useState<any[]>([]);
     const [checkedItems, setCheckedItems] = useState<{ [key: string]: boolean }>({});
-    const [courses, setCourses] = useState<any[]>([]);
+    const [courses, setCourses] = useState<string[]>([]);
     const [selectedCourse, setSelectedCourse] = useState<string>('');
     const [loading, setLoading] = useState(true);
 
@@ -23,7 +23,6 @@ const ChuongTrinh = () => {
                         throw new Error('Failed to fetch programs');
                     }
                     const data = await res.json();
-
                     data.sort((a: Record<string, any>, b: Record<string, any>) => a['Mã học phần'].localeCompare(b['Mã học phần']));
                     const programsWithNATitle = data.map((program: any) => ({
                         ...program,
@@ -53,6 +52,7 @@ const ChuongTrinh = () => {
                     console.error('Failed to load checkboxes:', error);
                 }
             };
+
             const fetchCourses = async () => {
                 try {
                     const res = await fetch('/api/courses');
@@ -60,11 +60,13 @@ const ChuongTrinh = () => {
                         throw new Error('Failed to fetch courses');
                     }
                     const data = await res.json();
+                    console.log('Fetched courses:', data); // Debugging line
                     setCourses(data);
                 } catch (error) {
                     console.error('Failed to fetch courses:', error);
                 }
             };
+
             const fetchData = async () => {
                 setLoading(true);
                 await Promise.all([fetchPrograms(), loadCheckboxes(), fetchCourses()]);
@@ -72,9 +74,6 @@ const ChuongTrinh = () => {
             };
 
             fetchData();
-
-            fetchPrograms();
-            loadCheckboxes();
         }
     }, [user]);
 
@@ -100,11 +99,12 @@ const ChuongTrinh = () => {
             console.error('Failed to save checkboxes:', error);
         }
     };
-    
+
     const handleCourseChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setSelectedCourse(event.target.value);
         // Fetch or filter programs based on the selected course if needed
     };
+
     if (loading) return <LoadingSpinner />; // Hiển thị loading spinner khi đang tải dữ liệu
 
     return (
@@ -118,8 +118,8 @@ const ChuongTrinh = () => {
                         className="form-select mt-1 block w-full max-w-xs px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                     >
                         <option value="">Chọn Khóa</option>
-                        {courses.map(course => (
-                            <option key={course.id} value={course.id}>{course.name}</option>
+                        {courses.map((course, index) => (
+                            <option key={index} value={course}>{course}</option>
                         ))}
                     </select>
                 </div>
