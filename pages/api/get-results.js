@@ -8,13 +8,11 @@ export default async function handler(req, res) {
       return;
     }
 
-    const userId = req.headers['user-id']; 
+    const userId = req.headers['user-id'];
     if (!userId) {
       res.status(400).json({ message: 'Thiếu userId' });
       return;
     }
-
-    const { selectedSemester } = req.query;
 
     let client;
 
@@ -22,38 +20,24 @@ export default async function handler(req, res) {
       client = await MongoClient.connect(uri);
       const db = client.db('HeKhuyenNghi');
 
-      const query = { userId };
-      if (selectedSemester) {
-        query['subjects.semester'] = selectedSemester;
+      const query = { userId: userId };
+
+      const results = await db.collection('KhuyenNghi').find(query).toArray();
+      console.log('Data from database:', results);
+
+      if (!results || results.length === 0) {
+        res.status(200).json({ message: 'Không có dữ liệu phù hợp' });
+        return;
       }
 
-      let results = await db.collection('KhuyenNghi').find(query).toArray();
+      const formattedResults = results.map(result => ({
+        _id: result._id.toString(), // Chuyển ObjectId thành chuỗi
+        name: result.name,
+        score: result.score,
+        semester: result.semester
+      }));
 
-      let groupedResults = {};
-      results.forEach(result => {
-        result.subjects.forEach(subject => {
-          const semester = subject.semester || 'N/A';
-          if (!groupedResults[semester]) {
-            groupedResults[semester] = [];
-          }
-          groupedResults[semester].push(subject);
-        });
-      });
-
-      Object.keys(groupedResults).forEach(semester => {
-        groupedResults[semester].sort((a, b) => {
-          const semesterA = a.semester || 'N/A';
-          const semesterB = b.semester || 'N/A';
-          return semesterA.localeCompare(semesterB, undefined, { numeric: true, sensitivity: 'base' });
-        });
-
-        groupedResults[semester].forEach((subject, index) => {
-          subject.STT = index + 1;
-        });
-      });
-
-      console.log('Grouped Results from DB:', groupedResults);
-      res.status(200).json(groupedResults);
+      res.status(200).json(formattedResults);
     } catch (error) {
       console.error('Lỗi khi lấy dữ liệu từ cơ sở dữ liệu:', error);
       res.status(500).json({ message: 'Có lỗi xảy ra khi lấy dữ liệu từ cơ sở dữ liệu' });

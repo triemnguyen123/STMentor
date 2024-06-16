@@ -1,4 +1,3 @@
-// api/programs.js
 import { MongoClient } from 'mongodb';
 
 export default async function handler(req, res) {
@@ -11,16 +10,14 @@ export default async function handler(req, res) {
     let client;
 
     try {
-        client = await MongoClient.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-        const db = client.db('CTDT_DB');
-        const collection = db.collection('CTDT_CL');
-
+        client = await MongoClient.connect(uri);
+        const db = client.db('HeKhuyenNghi');
+        const collection = db.collection('MonHoc');
+      
         if (req.method === 'GET') {
-            const { course } = req.query;  // Lấy query parameter 'course'
-            const query = course ? { khoa: course } : {};  // Tạo query object, nếu course có giá trị thì lọc theo course
-            const programs = await collection.find(query).toArray();
-            console.log('Programs from DB:', programs); // Log để kiểm tra dữ liệu trước khi trả về
-            res.status(200).json(programs);
+            const subjects = await collection.find({}).toArray();
+            console.log('Subjects from DB:', subjects); // Log để kiểm tra dữ liệu trước khi trả về
+            res.status(200).json(subjects);
         } else {
             res.status(405).json({ message: 'Phương thức không được phép' });
         }
@@ -29,7 +26,7 @@ export default async function handler(req, res) {
         res.status(500).json({ message: 'Có lỗi xảy ra khi lấy dữ liệu từ cơ sở dữ liệu' });
     } finally {
         if (client) {
-            await client.close();
+            await client.close(); // Đóng kết nối MongoDB sau khi sử dụng
         }
     }
 }

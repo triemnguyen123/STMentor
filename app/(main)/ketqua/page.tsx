@@ -1,9 +1,9 @@
 'use client';
-
 import { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/clerk-react'; 
+import { useAuth } from '@clerk/clerk-react';
 import { Header } from './header';
 import { FeedWrapper } from '@/components/feed-wrapper';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 const exists = (value: any) => value !== null && value !== undefined;
 
@@ -14,26 +14,21 @@ interface Subject {
   semester: string;
 }
 
-interface GroupedResults {
-  [semester: string]: Subject[];
-}
-
 const Ketqua = () => {
-  const [groupedResults, setGroupedResults] = useState<GroupedResults>({});
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { userId } = useAuth(); 
+  const { userId } = useAuth();
 
   useEffect(() => {
     if (!userId) return;
 
     const fetchResults = async () => {
       setLoading(true);
-      setGroupedResults({});
       try {
         const response = await fetch('/api/get-results', {
           headers: {
-            'user-id': userId, 
+            'user-id': userId,
           },
         });
         if (!response.ok) {
@@ -41,7 +36,7 @@ const Ketqua = () => {
         }
         const data = await response.json();
         console.log('Data from API:', data);
-        setGroupedResults(data);
+        setSubjects(data);
       } catch (error: any) {
         setError(error.message);
       } finally {
@@ -50,48 +45,61 @@ const Ketqua = () => {
     };
 
     fetchResults();
-  }, [userId]); 
+  }, [userId]);
 
-  if (loading) return <div>Đang tải dữ liệu...</div>;
+  if (loading) return <LoadingSpinner />; 
   if (error) return <div>{error}</div>;
 
+  const semesters = subjects.reduce((acc, subject) => {
+    if (!acc[subject.semester]) {
+      acc[subject.semester] = [];
+    }
+    acc[subject.semester].push(subject);
+    return acc;
+  }, {} as Record<string, Subject[]>);
+
+  const sortedSemesters = Object.keys(semesters).sort((a, b) => {
+    const semesterA = parseInt(a.replace('HK', ''));
+    const semesterB = parseInt(b.replace('HK', ''));
+    return semesterA - semesterB;
+  });
+
   return (
-    <div className="flex flex-row-reverse gap-[48px] px-6">
+    <div className="flex flex-row-reverse gap-12 px-6">
+      {loading && <LoadingSpinner />}
       <FeedWrapper>
         <Header title="Kết Quả" />
         <div className="mb-10">
-          {Object.keys(groupedResults).length === 0 ? (
+          {subjects.length === 0 ? (
             <p>Không có dữ liệu</p>
           ) : (
-            Object.keys(groupedResults).map((semester, index) => (
-              <div key={index}>
-                <h3 className="font-bold text-lg mt-4 mb-2">
-                  Học kỳ: {semester}
-                </h3>
-                <table className="min-w-full divide-y divide-gray-200">
+            sortedSemesters.map((semester, semesterIndex) => (
+              <div key={semesterIndex} className="mb-8">
+                <h2 className="text-2xl font-semibold mb-4 text-indigo-600">{semester}:</h2>
+                <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden divide-y divide-gray-200 ">
                   <thead>
                     <tr>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 bg-indigo-600 border border-gray-300 text-center text-xs font-medium text-gray-100 uppercase tracking-wider">
                         STT
                       </th>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 bg-indigo-600 border border-gray-300 text-center text-xs font-medium text-gray-100  uppercase tracking-wider">
                         Tên môn học
                       </th>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 bg-indigo-600 border border-gray-300 text-center text-xs font-medium text-gray-100  uppercase tracking-wider">
                         Điểm
                       </th>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 bg-indigo-600 border border-gray-300 text-center text-xs font-medium text-gray-100  uppercase tracking-wider">
                         Học kỳ
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {groupedResults[semester].map((subject, subjectIndex) => (
-                      <tr key={subjectIndex}>
-                        <td className="px-6 py-4 whitespace-nowrap">{subject.STT}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{subject.name || 'N/A'}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{subject.score !== undefined ? subject.score : 'N/A'}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{exists(subject.semester) ? subject.semester : 'N/A'}</td>
+                    {semesters[semester].map((subject, index) => (
+                      <tr key={index} className={`border-t ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                        <td className="border border-gray-300 py-2 px-4 text-center">{index + 1}</td>
+                        <td className="border border-gray-300 py-2 px-4 text-center">{subject.name || 'N/A'}</td>
+                        <td className="border border-gray-300 py-2 px-4 text-center">{subject.score !== undefined ? subject.score : 'N/A'}</td>
+                        <td className="border border-gray-300 py-2 px-4 text-center">{exists(subject.semester) ? subject.semester : 'N/A'}</td>
                       </tr>
                     ))}
                   </tbody>
