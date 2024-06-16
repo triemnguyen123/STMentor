@@ -79,11 +79,13 @@ const AdminKQHT = () => {
         throw new Error('Failed to fetch users');
       }
       const data = await res.json();
-      setUsers(data);
+      setUsers(data); // Cập nhật state `users` với dữ liệu lấy được từ API
     } catch (error) {
       console.error('Failed to fetch users:', error);
+      toast.error('Lỗi khi tải danh sách người dùng');
     }
   };
+  
 
   const handleEdit = (subject: Subject) => {
     setSelectedSubject(subject);
@@ -91,65 +93,66 @@ const AdminKQHT = () => {
 
   const handleSaveEdit = async (updatedSubject: Subject) => {
     try {
-        const { _id, name, score, semester } = updatedSubject;
-
-        // Validation
-        const validNameRegex = /^[\p{L}0-9\s]+$/u;  // Cho phép chữ cái Unicode, số và khoảng trắng
-        const validSemesterRegex = /^[\p{L}0-9\s]+$/u;  // Cho phép chữ cái Unicode, số và khoảng trắng
-
-        if (!name || !validNameRegex.test(name.trim())) {
-            toast.error('Tên môn học không hợp lệ. Vui lòng nhập lại.');
-            return;
-        }
-        if (isNaN(score) || score < 0 || score > 10) {
-            toast.error('Điểm phải nằm trong khoảng từ 0 đến 10.');
-            return;
-        }
-        if (!semester || !validSemesterRegex.test(semester.trim())) {
-            toast.error('Học kỳ không hợp lệ. Vui lòng nhập lại.');
-            return;
-        }
-
-        const updatedData = {
-            name,
-            score,
-            semester,
-        };
-
-        const res = await fetch(`/api/update-subject?id=${_id}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(updatedData),
-        });
-
-        if (!res.ok) {
-            throw new Error('Failed to update subject');
-        }
-
-        setSelectedSubject(null);
-
-        setSubjects((prevSubjects) =>
-            prevSubjects.map((subject) =>
-                subject._id === _id ? { ...subject, ...updatedData } : subject
-            )
-        );
-
-        toast.success('Đã cập nhật thông tin môn học thành công', {
-            position: "top-right",
-            autoClose: 1000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-        });
+      const { _id, name, score, semester } = updatedSubject;
+  
+      // Validation
+      const validNameRegex = /^[\p{L}0-9\s]+$/u;  // Cho phép chữ cái Unicode, số và khoảng trắng
+      const validSemesterRegex = /^[\p{L}0-9\s]+$/u;  // Cho phép chữ cái Unicode, số và khoảng trắng
+  
+      if (!name || !validNameRegex.test(name.trim())) {
+        toast.error('Tên môn học không hợp lệ. Vui lòng nhập lại.');
+        return;
+      }
+      if (isNaN(score) || score < 0 || score > 10) {
+        toast.error('Điểm phải nằm trong khoảng từ 0 đến 10.');
+        return;
+      }
+      if (!semester || !validSemesterRegex.test(semester.trim())) {
+        toast.error('Học kỳ không hợp lệ. Vui lòng nhập lại.');
+        return;
+      }
+  
+      const updatedData = {
+        name,
+        score,
+        semester,
+      };
+  
+      const res = await fetch(`/api/update-subject?id=${_id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedData),
+      });
+  
+      if (!res.ok) {
+        throw new Error('Failed to update subject');
+      }
+  
+      setSelectedSubject(null);
+  
+      setSubjects((prevSubjects) =>
+        prevSubjects.map((subject) =>
+          subject._id === _id ? { ...subject, ...updatedData } : subject
+        )
+      );
+  
+      toast.success('Đã cập nhật thông tin môn học thành công', {
+        position: "top-right",
+        autoClose: 1000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
     } catch (error) {
-        console.error('Failed to update subject:', error);
-        toast.error('Lỗi khi cập nhật thông tin môn học');
+      console.error('Failed to update subject:', error);
+      toast.error('Lỗi khi cập nhật thông tin môn học');
     }
   };
+  
 
   const handleDelete = async (id: string) => {
     try {

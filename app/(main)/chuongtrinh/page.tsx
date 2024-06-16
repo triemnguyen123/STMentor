@@ -12,23 +12,24 @@ const ChuongTrinh = () => {
     const [checkedItems, setCheckedItems] = useState<{ [key: string]: boolean }>({});
     const [courses, setCourses] = useState<string[]>([]);
     const [selectedCourse, setSelectedCourse] = useState<string>('');
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (user) {
-            const fetchPrograms = async () => {
+            const fetchCourses = async () => {
                 try {
                     const res = await fetch('/api/programs');
                     if (!res.ok) {
                         throw new Error('Failed to fetch programs');
                     }
                     const data = await res.json();
-                    data.sort((a: Record<string, any>, b: Record<string, any>) => a['Mã học phần'].localeCompare(b['Mã học phần']));
-                    const programsWithNATitle = data.map((program: any) => ({
-                        ...program,
-                        TenHocPhan: program['Tên học phần '] || 'N/A'
-                    }));
-                    setPrograms(programsWithNATitle);
+                    console.log('Programs from API:', data);
+
+                    // Trích xuất danh sách khóa học (khoa)
+                    const uniqueCourses = Array.from(new Set(data.map((program: any) => program.khoa))) as string[];
+                    console.log('Unique courses:', uniqueCourses);
+
+                    setCourses(uniqueCourses);
                 } catch (error) {
                     console.error('Failed to fetch programs:', error);
                 }
@@ -53,29 +54,44 @@ const ChuongTrinh = () => {
                 }
             };
 
-            const fetchCourses = async () => {
-                try {
-                    const res = await fetch('/api/courses');
-                    if (!res.ok) {
-                        throw new Error('Failed to fetch courses');
-                    }
-                    const data = await res.json();
-                    console.log('Fetched courses:', data); // Debugging line
-                    setCourses(data);
-                } catch (error) {
-                    console.error('Failed to fetch courses:', error);
-                }
-            };
-
-            const fetchData = async () => {
-                setLoading(true);
-                await Promise.all([fetchPrograms(), loadCheckboxes(), fetchCourses()]);
-                setLoading(false);
-            };
-
-            fetchData();
+            fetchCourses();
+            loadCheckboxes();
         }
     }, [user]);
+
+    useEffect(() => {
+        const fetchFilteredPrograms = async () => {
+            if (selectedCourse) {
+                setLoading(true);
+                try {
+                    const res = await fetch(`/api/programs?course=${selectedCourse}`);
+                    if (!res.ok) {
+                        throw new Error('Failed to fetch filtered programs');
+                    }
+                    const data = await res.json();
+                    console.log('Filtered programs:', data);
+
+                    const programsWithNATitle = data.map((program: any) => ({
+                        ...program,
+                        TenHocPhan: program['Tên học phần '] || 'N/A'
+                    }));
+
+                    // Sắp xếp dữ liệu theo 'Mã học phần'
+                    programsWithNATitle.sort((a: Record<string, any>, b: Record<string, any>) => a['Mã học phần'].localeCompare(b['Mã học phần']));
+
+                    setPrograms(programsWithNATitle);
+                } catch (error) {
+                    console.error('Failed to fetch filtered programs:', error);
+                } finally {
+                    setLoading(false);
+                }
+            } else {
+                setPrograms([]);
+            }
+        };
+
+        fetchFilteredPrograms();
+    }, [selectedCourse]);
 
     const handleCheckboxChange = async (id: string) => {
         const newCheckedItems = {
@@ -102,10 +118,9 @@ const ChuongTrinh = () => {
 
     const handleCourseChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setSelectedCourse(event.target.value);
-        // Fetch or filter programs based on the selected course if needed
     };
 
-    if (loading) return <LoadingSpinner />; // Hiển thị loading spinner khi đang tải dữ liệu
+    if (loading) return <LoadingSpinner />;
 
     return (
         <div className="flex flex-row-reverse gap-12 px-6">

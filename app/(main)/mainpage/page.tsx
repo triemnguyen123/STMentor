@@ -10,21 +10,25 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Button } from "@/components/ui/button"; 
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
-// Add CSS styles directly
-const styleSheet = document.createElement("style");
-styleSheet.type = "text/css";
-styleSheet.innerText = `
-  .custom-tbody {
-    font-size: 1rem; /* Adjust this value as needed */
-  }
-`;
-document.head.appendChild(styleSheet);
-
 const MainPage = () => {
   const { userId } = useAuth();
   const [subjects, setSubjects] = useState<{ name: string; credits: number; score: number; semester: string; userId: string | null; isChanged: boolean; _id: string; category: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      // Add CSS styles directly
+      const styleSheet = document.createElement("style");
+      styleSheet.type = "text/css";
+      styleSheet.innerText = `
+        .custom-tbody {
+          font-size: 1rem; /* Adjust this value as needed */
+        }
+      `;
+      document.head.appendChild(styleSheet);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
