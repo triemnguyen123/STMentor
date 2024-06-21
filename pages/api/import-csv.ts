@@ -42,7 +42,7 @@ const importCSV = async (req: NextApiRequest, res: NextApiResponse) => {
           }
         })
         .on('end', () => {
-          fs.unlinkSync(filePath); // Delete the file after processing
+          fs.unlinkSync(filePath); 
           res.status(200).json({ message: 'CSV data imported successfully' });
         });
     });

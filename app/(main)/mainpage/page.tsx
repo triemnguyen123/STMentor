@@ -1,35 +1,46 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { FeedWrapper } from '@/components/feed-wrapper';
-import ErrorModal from './ErrorModal';
+import ErrorModal from './ErrorModal'; // Corrected import
 import { Header } from './header';
 import { useAuth } from '@clerk/clerk-react';
 import React from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Button } from "@/components/ui/button"; 
+import { Button } from "@/components/ui/button";
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { 
+  Dialog, 
+  DialogTrigger, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogClose 
+} from "@/components/ui/dialog";
 
 const MainPage = () => {
   const { userId } = useAuth();
-  const [subjects, setSubjects] = useState<{ name: string; credits: number; score: number; semester: string; userId: string | null; isChanged: boolean; _id: string; category: string }[]>([]);
+  const [subjects, setSubjects] = useState<{ tenMonHoc: string; TC: number; diem: number; hk: string; userId: string | null; isChanged: boolean; _id: string; chuyenNganh: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [recommendation, setRecommendation] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false); // New state for dialog
 
   useEffect(() => {
     if (typeof document !== 'undefined') {
-      // Add CSS styles directly
       const styleSheet = document.createElement("style");
       styleSheet.type = "text/css";
       styleSheet.innerText = `
         .custom-tbody {
-          font-size: 1rem; /* Adjust this value as needed */
+          font-size: 1rem; 
         }
       `;
       document.head.appendChild(styleSheet);
     }
   }, []);
-
+  
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -38,15 +49,15 @@ const MainPage = () => {
           throw new Error('Failed to fetch data');
         }
         const data = await response.json();
-        const initialSubjects = data.map((subject: { _id: any; name: string; credits: number; category: string }) => ({
-          name: subject.name,
-          credits: subject.credits,
-          score: 0,
-          semester: 'HK1',
+        const initialSubjects = data.map((subject: any) => ({
+          tenMonHoc: subject.tenMonHoc,
+          TC: subject.TC,
+          diem: 0,
+          hk: 'HK1',
           _id: subject._id,
           userId: userId || null,
           isChanged: false,
-          category: subject.category,
+          chuyenNganh: subject.chuyenNganh,
         }));
         setSubjects(initialSubjects);
       } catch (error) {
@@ -55,22 +66,24 @@ const MainPage = () => {
         setLoading(false);
       }
     };
+  
     fetchData();
-  }, [userId]);
+  }, [userId]); 
+  
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-
+  
     const changedSubjects = subjects.filter(subject => subject.isChanged);
-
+  
     const data = changedSubjects.map(subject => ({
-      name: subject.name,
-      credits: subject.credits,
-      score: subject.score,
-      semester: subject.semester,
+      tenMonHoc: subject.tenMonHoc,
+      TC: subject.TC,
+      diem: subject.diem,
+      hk: subject.hk,
       userId: userId || null,
     }));
-
+  
     try {
       const response = await fetch('/api/submit', {
         method: 'POST',
@@ -80,10 +93,12 @@ const MainPage = () => {
         },
         body: JSON.stringify({ data }),
       });
-
+  
       if (response.ok) {
         toast.success('Dữ liệu đã được gửi thành công');
-        setSubjects(subjects.map(subject => ({ ...subject, score: 0, isChanged: false }))); // Reset data
+        setSubjects(subjects.map(subject => ({ ...subject, diem: 0, isChanged: false }))); // Reset data
+        generateRecommendation();
+        setIsDialogOpen(true); // Open the dialog
       } else {
         const errorData = await response.json();
         console.error('Error response from server:', errorData);
@@ -100,35 +115,130 @@ const MainPage = () => {
       setError(errorMessage);
     }
   };
+  
 
-  const handleInputChange = (name: string, value: string | number, index: number) => {
+  const handleInputChange = (tenMonHoc: string, value: string, index: number) => {
     const updatedSubjects = [...subjects];
-    updatedSubjects[index] = { ...subjects[index], [name]: value, isChanged: true };
+    const parsedValue = parseFloat(value);
+    updatedSubjects[index] = { ...updatedSubjects[index], diem: isNaN(parsedValue) ? 0 : parsedValue, isChanged: true };
     setSubjects(updatedSubjects);
   };
 
-  const handleSemesterChange = (semester: string, index: number) => {
+  const handleSemesterChange = (hk: string, index: number) => {
     const updatedSubjects = [...subjects];
-    updatedSubjects[index] = { ...subjects[index], semester, isChanged: true };
+    updatedSubjects[index] = { ...updatedSubjects[index], hk: hk, isChanged: true };
     setSubjects(updatedSubjects);
   };
+
+  const generateRecommendation = () => {
+    // Extracting subject scores
+    const scores = subjects.reduce((acc, subject) => {
+      acc[subject.tenMonHoc] = subject.diem;
+      return acc;
+    }, {} as { [key: string]: number });
+  
+    // Initial values for all subjects
+    const toanCaoCap = scores['Toán cao cấp và ứng dụng'] || 0;
+    const daiSoTuyenTinh = scores['Đại số tuyến tính và ứng dụng'] || 0;
+    const vatLyDaiCuong1 = scores['Vật lý đại cương 1'] || 0;
+    const vatLyDaiCuong2 = scores['Vật lý đại cương 2'] || 0;
+    const toanRoiRac = scores['Toán rời rạc'] || 0;
+    const nhapMonCNTT = scores['Nhập môn Công nghệ thông tin'] || 0;
+    const coSoLapTrinh = scores['Cơ sở lập trình'] || 0;
+    const kyThuatLapTrinh = scores['Kỹ thuật lập trình'] || 0;
+    const lapTrinhHuongDoiTuong = scores['Lập trình hướng đối tượng'] || 0;
+    const cauTrucDuLieuVaGiaiThuat = scores['Cấu trúc dữ liệu và giải thuật'] || 0;
+    const coSoDuLieu = scores['Cơ sở dữ liệu'] || 0;
+    const monMangMayTinh = scores['Nhập môn Mạng máy tính và điện toán đám mây'] || 0;
+    const cacNenTangPhatTrienPhanMem = scores['Các nền tảng phát triển phần mềm'] || 0;
+  
+    let recommendation = '';
+  
+    // Decision tree logic with all subjects
+    if (nhapMonCNTT > 6.75) {
+      if (vatLyDaiCuong2 > 8.10) {
+        if (lapTrinhHuongDoiTuong > 8.75) {
+          if (vatLyDaiCuong1 > 8.95) {
+            recommendation = 'Công nghệ phần mềm';
+          } else if (vatLyDaiCuong2 > 9.40) {
+            recommendation = 'Trí tuệ nhân tạo';
+          } else if (nhapMonCNTT > 8.60) {
+            recommendation = 'An ninh Mạng và IoT';
+          } else {
+            recommendation = 'Công nghệ phần mềm';
+          }
+        } else if (coSoDuLieu > 7.15) {
+          recommendation = 'An ninh Mạng và IoT';
+        } else {
+          recommendation = 'Công nghệ phần mềm';
+        }
+      } else if (cauTrucDuLieuVaGiaiThuat > 6.55) {
+        if (coSoDuLieu > 3.30) {
+          if (vatLyDaiCuong2 > 8.25) {
+            if (vatLyDaiCuong2 > 8.80) {
+              recommendation = 'Công nghệ phần mềm';
+            } else if (cacNenTangPhatTrienPhanMem > 7.80) {
+              recommendation = 'Trí tuệ nhân tạo';
+            } else {
+              recommendation = 'An ninh Mạng và IoT';
+            }
+          } else {
+            recommendation = 'Công nghệ phần mềm';
+          }
+        } else if (monMangMayTinh > 8.85) {
+          recommendation = 'An ninh Mạng và IoT';
+        } else {
+          recommendation = 'Công nghệ phần mềm';
+        }
+      } else {
+        recommendation = 'Công nghệ phần mềm';
+      }
+    } else if (cauTrucDuLieuVaGiaiThuat > 5.90) {
+      if (vatLyDaiCuong2 > 8.10) {
+        if (lapTrinhHuongDoiTuong > 6.75) {
+          recommendation = 'Trí tuệ nhân tạo';
+        } else {
+          recommendation = 'Công nghệ phần mềm';
+        }
+      } else {
+        if (coSoDuLieu > 8.30) {
+          recommendation = 'An ninh Mạng và IoT';
+        } else if (vatLyDaiCuong2 > 8.00) {
+          recommendation = 'Công nghệ phần mềm';
+        } else if (kyThuatLapTrinh > 5.90) {
+          recommendation = 'Trí tuệ nhân tạo';
+        } else {
+          recommendation = 'Công nghệ phần mềm';
+        }
+      }
+    } else if (toanRoiRac > 9.20) {
+      recommendation = 'An ninh Mạng và IoT';
+    } else {
+      recommendation = 'Công nghệ phần mềm';
+    }
+  
+    setRecommendation(recommendation);
+  };
+  
 
   const groupedSubjects = subjects.reduce((acc, subject) => {
-    if (!acc[subject.category]) {
-      acc[subject.category] = [];
+    if (!acc[subject.chuyenNganh]) {
+      acc[subject.chuyenNganh] = [];
     }
-    acc[subject.category].push(subject);
+    acc[subject.chuyenNganh].push(subject);
     return acc;
-  }, {} as { [key: string]: typeof subjects });
+  }, {} as { [key: string]: { tenMonHoc: string; TC: number; diem: number; hk: string; userId: string | null; isChanged: boolean; _id: string }[] });
 
+  if (loading) {
+    return <LoadingSpinner />;
+  }
   return (
     <div className="relative flex flex-col px-6">
-      {loading && <LoadingSpinner />}
       <FeedWrapper>
         <Header title="Hệ Khuyến Nghị" />
         <div className="overflow-x-auto">
           <form onSubmit={handleSubmit}>
-            {Object.keys(groupedSubjects).map(category => (
+            {Object.keys(groupedSubjects).map((category) => (
               <div key={category} className="mb-6">
                 <h2 className="text-xl font-bold mb-4">{category}</h2>
                 <table className="min-w-full bg-white shadow-md rounded-lg">
@@ -142,31 +252,27 @@ const MainPage = () => {
                     </tr>
                   </thead>
                   <tbody className="text-gray-600 text-sm font-light custom-tbody">
-                    {groupedSubjects[category].map((subject, index) => (
+                    {groupedSubjects[category].map((subject, subIndex) => (
                       <tr key={subject._id} className="border-b border-gray-100 hover:bg-gray-100">
-                        <td className="py-3 px-6 text-left whitespace-nowrap">{index + 1}</td>
-                        <td className="py-3 px-6 text-left">
-                          <span>{subject.name}</span>
-                        </td>
-                        <td className="py-3 px-6 text-left">
-                          <span>{subject.credits}</span>
-                        </td>
+                        <td className="py-3 px-6 text-left whitespace-nowrap">{subIndex + 1}</td>
+                        <td className="py-3 px-6 text-left">{subject.tenMonHoc}</td>
+                        <td className="py-3 px-6 text-left">{subject.TC}</td>
                         <td className="py-3 px-6 text-left">
                           <input
                             type="number"
-                            placeholder="Điểm"
+                            step="0.01"
                             min="0"
                             max="10"
-                            className="border p-2 rounded-md w-full"
-                            value={subject.score}
-                            onChange={(e) => handleInputChange('score', parseFloat(e.target.value), subjects.indexOf(subject))}
+                            value={subject.diem.toString()}
+                            onChange={(e) => handleInputChange(subject.tenMonHoc, e.target.value, subjects.findIndex(s => s._id === subject._id))}
+                            className="w-20 p-2 border rounded"
                           />
                         </td>
                         <td className="py-3 px-6 text-left">
                           <select
-                            value={subject.semester}
-                            onChange={(e) => handleSemesterChange(e.target.value, subjects.indexOf(subject))}
-                            className="border p-2 rounded-md w-full"
+                            value={subject.hk}
+                            onChange={(e) => handleSemesterChange(e.target.value, subjects.findIndex(s => s._id === subject._id))}
+                            className="w-20 p-2 border rounded"
                           >
                             <option value="HK1">HK1</option>
                             <option value="HK2">HK2</option>
@@ -179,16 +285,41 @@ const MainPage = () => {
                 </table>
               </div>
             ))}
-            <div className="flex justify-center mt-10">
-              <Button type="submit" variant="default" className="py-1 px-2 bg-blue-500 text-white hover:bg-yellow-700 mr-2">Submit</Button>
+            <div className="flex justify-center mt-4">
+              <Button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Gửi và Xem Khuyến Nghị
+              </Button>
             </div>
           </form>
         </div>
+  
+        {/* Recommendation Dialog */}
+        {recommendation && (
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="text-2xl">Hệ Thống Khuyến Nghị :</DialogTitle>
+                <DialogDescription className="text-lg mt-2">
+                  Dựa vào điểm của bạn thì chuyên ngành khuyến nghị bạn nên chọn <span className="font-bold text-blue-600 text-lg">{recommendation}</span>
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button onClick={() => setIsDialogOpen(false)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                  Đóng
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+        {/* Error Modal */}
+        {error && <ErrorModal message={error} onClose={() => setError(null)} />}
+  
+        <ToastContainer />
       </FeedWrapper>
-      {error && <ErrorModal message={error} onClose={() => setError(null)} />}
-      <ToastContainer position="top-right" autoClose={1000} hideProgressBar={false} closeOnClick pauseOnHover draggable />
     </div>
   );
+  
+  
 };
 
 export default MainPage;
