@@ -10,9 +10,9 @@ import { Button } from "@/components/ui/button";
 interface Subject {
   _id: string;
   STT: number;
-  name: string;
-  score: number;
-  semester: string;
+  tenMonHoc: string;
+  diem: number;
+  hk: string;
 }
 
 const AdminKQHT = () => {
@@ -21,7 +21,7 @@ const AdminKQHT = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>('');
   const { userId } = useAuth();
 
   const fetchResults = async () => {
@@ -46,10 +46,11 @@ const AdminKQHT = () => {
       }
 
       const formattedData: Subject[] = data.map((subject, index) => ({
-        _id: subject._id,
-        name: subject.name,
-        score: subject.score,
-        semester: subject.semester,
+        _id: subject._id.toString(),
+        tenMonHoc: subject.tenMonHoc, 
+        TC: subject.TC, 
+        diem: subject.diem, 
+        hk: subject.hk, 
         STT: index + 1,
       }));
 
@@ -79,7 +80,7 @@ const AdminKQHT = () => {
         throw new Error('Failed to fetch users');
       }
       const data = await res.json();
-      setUsers(data); // Cập nhật state `users` với dữ liệu lấy được từ API
+      setUsers(data); 
     } catch (error) {
       console.error('Failed to fetch users:', error);
       toast.error('Lỗi khi tải danh sách người dùng');
@@ -93,29 +94,28 @@ const AdminKQHT = () => {
 
   const handleSaveEdit = async (updatedSubject: Subject) => {
     try {
-      const { _id, name, score, semester } = updatedSubject;
+      const { _id, tenMonHoc, diem, hk } = updatedSubject;
   
-      // Validation
-      const validNameRegex = /^[\p{L}0-9\s]+$/u;  // Cho phép chữ cái Unicode, số và khoảng trắng
-      const validSemesterRegex = /^[\p{L}0-9\s]+$/u;  // Cho phép chữ cái Unicode, số và khoảng trắng
+      const validNameRegex = /^[\p{L}0-9\s]+$/u;  
+      const validhkRegex = /^[\p{L}0-9\s]+$/u;  // Unicode, số và khoảng trắng
   
-      if (!name || !validNameRegex.test(name.trim())) {
+      if (!tenMonHoc || !validNameRegex.test(tenMonHoc.trim())) {
         toast.error('Tên môn học không hợp lệ. Vui lòng nhập lại.');
         return;
       }
-      if (isNaN(score) || score < 0 || score > 10) {
+      if (isNaN(diem) || diem < 0 || diem > 10) {
         toast.error('Điểm phải nằm trong khoảng từ 0 đến 10.');
         return;
       }
-      if (!semester || !validSemesterRegex.test(semester.trim())) {
+      if (!hk || !validhkRegex.test(hk.trim())) {
         toast.error('Học kỳ không hợp lệ. Vui lòng nhập lại.');
         return;
       }
   
       const updatedData = {
-        name,
-        score,
-        semester,
+        name: tenMonHoc,
+        diem,
+        hk,
       };
   
       const res = await fetch(`/api/update-subject?id=${_id}`, {
@@ -183,17 +183,17 @@ const AdminKQHT = () => {
 
   const groupedSubjects = Object.entries(
     subjects.reduce((groups, subject) => {
-      const semester = subject.semester;
-      if (!groups[semester]) {
-        groups[semester] = [];
+      const hk = subject.hk;
+      if (!groups[hk]) {
+        groups[hk] = [];
       }
-      groups[semester].push(subject);
+      groups[hk].push(subject);
       return groups;
     }, {} as { [key: string]: Subject[] })
   )
     .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true })) // Sắp xếp các học kỳ theo thứ tự tự nhiên
-    .map(([semester, subjects]) => ({
-      semester,
+    .map(([hk, subjects]) => ({
+      hk,
       subjects: subjects.map((subject, index) => ({
         ...subject,
         STT: index + 1,
@@ -223,9 +223,9 @@ const AdminKQHT = () => {
         {error && <p className="text-center text-red-500">Có lỗi xảy ra: {error}</p>}
         {!loading && !error && (
           <div className="overflow-x-auto px-4">
-            {groupedSubjects.map(({ semester, subjects }) => (
-              <div key={semester} className="mb-8">
-                <h2 className="text-xl font-bold mb-4">Học kỳ: {semester}</h2>
+            {groupedSubjects.map(({ hk, subjects }) => (
+              <div key={hk} className="mb-8">
+                <h2 className="text-xl font-bold mb-4">Học kỳ: {hk}</h2>
                 <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
                   <thead className="bg-indigo-600 text-white">
                     <tr>
@@ -239,8 +239,8 @@ const AdminKQHT = () => {
                     {subjects.map((subject) => (
                       <tr key={subject._id} className={`border-t ${subject.STT % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
                         <td className="border border-gray-300 py-2 px-4 text-center">{subject.STT}</td>
-                        <td className="border border-gray-300 py-2 px-4 text-center">{subject.name}</td>
-                        <td className="border border-gray-300 py-2 px-4 text-center">{subject.score}</td>
+                        <td className="border border-gray-300 py-2 px-4 text-center">{subject.tenMonHoc}</td>
+                        <td className="border border-gray-300 py-2 px-4 text-center">{subject.diem}</td>
                         <td className="border border-gray-300 py-2 px-4 text-center">
                           <Button onClick={() => handleEdit(subject)} className="bg-yellow-500 text-white hover:bg-yellow-700 mr-2">Sửa</Button>
                           <Button onClick={() => handleDelete(subject._id)} className="bg-red-500 text-white hover:bg-red-700">Xóa</Button>
@@ -273,12 +273,12 @@ interface EditSubjectPopupProps {
 }
 
 const EditSubjectPopup: React.FC<EditSubjectPopupProps> = ({ subject, onClose, onSave }) => {
-  const [name, setName] = useState(subject.name);
-  const [score, setScore] = useState(subject.score);
-  const [semester, setSemester] = useState(subject.semester);
+  const [tenMonHoc, setName] = useState(subject.tenMonHoc);
+  const [diem, setdiem] = useState(subject.diem);
+  const [hk, sethk] = useState(subject.hk);
 
   const handleSave = () => {
-    onSave({ ...subject, name, score, semester });
+    onSave({ ...subject, tenMonHoc, diem, hk });
   };
 
   return (
@@ -287,15 +287,15 @@ const EditSubjectPopup: React.FC<EditSubjectPopupProps> = ({ subject, onClose, o
         <h3 className="text-lg font-bold mb-4">Sửa thông tin môn học</h3>
         <div className="mb-4">
           <label className="block mb-1">Tên môn học</label>
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full border px-2 py-1" />
+          <input type="text" value={tenMonHoc} onChange={(e) => setName(e.target.value)} className="w-full border px-2 py-1" />
         </div>
         <div className="mb-4">
           <label className="block mb-1">Điểm</label>
-          <input type="number" value={score} onChange={(e) => setScore(parseFloat(e.target.value))} className="w-full border px-2 py-1" />
+          <input type="number" value={diem} onChange={(e) => setdiem(parseFloat(e.target.value))} className="w-full border px-2 py-1" />
         </div>
         <div className="mb-4">
           <label className="block mb-1">Học kỳ</label>
-          <input type="text" value={semester} onChange={(e) => setSemester(e.target.value)} className="w-full border px-2 py-1" />
+          <input type="text" value={hk} onChange={(e) => sethk(e.target.value)} className="w-full border px-2 py-1" />
         </div>
 
         <div className="flex justify-end">

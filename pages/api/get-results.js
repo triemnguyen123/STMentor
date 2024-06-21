@@ -31,12 +31,14 @@ export default async function handler(req, res) {
       }
 
       const formattedResults = results.map(result => ({
-        _id: result._id.toString(), // Chuyển ObjectId thành chuỗi
-        name: result.name,
-        score: result.score,
-        semester: result.semester
+        _id: result._id.toString(),
+        tenMonHoc: result.tenMonHoc, // Sửa lại tên trường
+        TC: result.TC, // Sửa lại tên trường nếu cần thiết
+        diem: result.diem, // Sửa lại tên trường
+        hk: result.hk, // Sửa lại tên trường
+        userId: result.userId
       }));
-
+      
       res.status(200).json(formattedResults);
     } catch (error) {
       console.error('Lỗi khi lấy dữ liệu từ cơ sở dữ liệu:', error);

@@ -25,7 +25,7 @@ const ChuongTrinh = () => {
                     const data = await res.json();
                     console.log('Programs from API:', data);
 
-                    // Trích xuất danh sách khóa học (khoa)
+                   
                     const uniqueCourses = Array.from(new Set(data.map((program: any) => program.khoa))) as string[];
                     console.log('Unique courses:', uniqueCourses);
 
@@ -76,7 +76,6 @@ const ChuongTrinh = () => {
                         TenHocPhan: program['Tên học phần '] || 'N/A'
                     }));
 
-                    // Sắp xếp dữ liệu theo 'Mã học phần'
                     programsWithNATitle.sort((a: Record<string, any>, b: Record<string, any>) => a['Mã học phần'].localeCompare(b['Mã học phần']));
 
                     setPrograms(programsWithNATitle);

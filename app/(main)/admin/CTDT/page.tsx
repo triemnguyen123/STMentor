@@ -23,13 +23,7 @@ const AdminCTDT = () => {
   const [courses, setCourses] = useState<string[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  interface Program {
-    _id: string; // Assuming _id is of type string
-    'Mã học phần': string;
-    'Tên học phần ': string;
-    TC: string;
-    khoa: string;
-  }
+ 
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -61,7 +55,7 @@ const AdminCTDT = () => {
     }
   }, [selectedUserId, selectedCourse]);
   useEffect(() => {
-    setIsDialogOpen(true); // Khi muốn hiển thị dialog
+    setIsDialogOpen(true); 
   }, []);
   const fetchUsers = async () => {
     try {
@@ -302,7 +296,6 @@ const AdminCTDT = () => {
             throw new Error('Failed to delete program');
         }
 
-        // Assuming fetchPrograms fetches the programs for the selected user and course
         await fetchPrograms(selectedUserId, selectedCourse);
 
         toast.success('Bạn đã xóa môn học thành công', {
@@ -335,7 +328,6 @@ const AdminCTDT = () => {
     if (fileInputRef.current && fileInputRef.current.files && fileInputRef.current.files.length > 0) {
       const file = fileInputRef.current.files[0];
 
-      // Kiểm tra định dạng tệp có phải CSV không
       if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
         toast.error('Tệp dữ liệu không đúng định dạng CSV', {
           position: "top-right",
@@ -351,7 +343,7 @@ const AdminCTDT = () => {
 
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('collectionName', 'CTDT_CL'); // Or 'k27', depending on your requirement
+      formData.append('collectionName', 'CTDT_CL'); 
 
       try {
         const res = await fetch('/api/import-csv', {
@@ -373,7 +365,6 @@ const AdminCTDT = () => {
           progress: undefined,
         });
 
-        // Fetch programs again to refresh the list
         await fetchPrograms(selectedUserId, courses[0]);
       } catch (error: unknown) {
         console.error('Failed to upload CSV:', error);
