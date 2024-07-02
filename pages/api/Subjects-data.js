@@ -16,7 +16,7 @@ export default async function handler(req, res) {
       
         if (req.method === 'GET') {
             const subjects = await collection.find({}).toArray();
-            console.log('Subjects from DB:', subjects); // Log để kiểm tra dữ liệu trước khi trả về
+            console.log('Subjects from DB:', subjects); 
             res.status(200).json(subjects);
         } else {
             res.status(405).json({ message: 'Phương thức không được phép' });
@@ -26,7 +26,7 @@ export default async function handler(req, res) {
         res.status(500).json({ message: 'Có lỗi xảy ra khi lấy dữ liệu từ cơ sở dữ liệu' });
     } finally {
         if (client) {
-            await client.close(); // Đóng kết nối MongoDB sau khi sử dụng
+            await client.close(); 
         }
     }
 }

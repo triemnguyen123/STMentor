@@ -6,10 +6,10 @@ const uri = process.env.MONGODB_URI || '';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === 'POST') {
-        const { program } = req.body;
+        const { program, userId, course } = req.body;
 
-        if (!program) {
-            return res.status(400).json({ message: 'Program is required' });
+        if (!program || !userId || !course) {
+            return res.status(400).json({ message: 'Program, User ID, and Course are required' });
         }
 
         const client = new MongoClient(uri);
