@@ -35,14 +35,14 @@ const AdminKQHT = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Lỗi khi lấy dữ liệu');
+        throw new Error('Lỗi khi tải dữ liệu từ api');
       }
 
       const data = await response.json();
-      console.log('Data from API:', data);
+      console.log('Data from api:', data);
 
       if (!Array.isArray(data)) {
-        throw new Error('Dữ liệu trả về không hợp lệ');
+        throw new Error('Dữ liệu của người dùng không có');
       }
 
       const formattedData: Subject[] = data.map((subject, index) => ({
@@ -97,7 +97,7 @@ const AdminKQHT = () => {
       const { _id, tenMonHoc, diem, hk } = updatedSubject;
   
       const validNameRegex = /^[\p{L}0-9\s]+$/u;  
-      const validhkRegex = /^[\p{L}0-9\s]+$/u;  // Unicode, số và khoảng trắng
+      const validhkRegex = /^[\p{L}0-9\s]+$/u;  
   
       if (!tenMonHoc || !validNameRegex.test(tenMonHoc.trim())) {
         toast.error('Tên môn học không hợp lệ. Vui lòng nhập lại.');
@@ -191,7 +191,7 @@ const AdminKQHT = () => {
       return groups;
     }, {} as { [key: string]: Subject[] })
   )
-    .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true })) // Sắp xếp các học kỳ theo thứ tự tự nhiên
+    .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true }))
     .map(([hk, subjects]) => ({
       hk,
       subjects: subjects.map((subject, index) => ({
@@ -220,7 +220,7 @@ const AdminKQHT = () => {
         </div>
 
         {loading && <p className="text-center text-gray-500">Đang tải dữ liệu...</p>}
-        {error && <p className="text-center text-red-500">Có lỗi xảy ra: {error}</p>}
+        {error && <p className="text-center text-red-500">{error}</p>}
         {!loading && !error && (
           <div className="overflow-x-auto px-4">
             {groupedSubjects.map(({ hk, subjects }) => (

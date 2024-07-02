@@ -23,7 +23,7 @@ const ChuongTrinh = () => {
                         throw new Error('Failed to fetch programs');
                     }
                     const data = await res.json();
-                    console.log('Programs from API:', data);
+                    console.log('Programs from api:', data);
 
                    
                     const uniqueCourses = Array.from(new Set(data.map((program: any) => program.khoa))) as string[];
@@ -73,7 +73,7 @@ const ChuongTrinh = () => {
 
                     const programsWithNATitle = data.map((program: any) => ({
                         ...program,
-                        TenHocPhan: program['Tên học phần '] || 'N/A'
+                        TenHocPhan: program['Tên học phần'] || 'N/A'
                     }));
 
                     programsWithNATitle.sort((a: Record<string, any>, b: Record<string, any>) => a['Mã học phần'].localeCompare(b['Mã học phần']));

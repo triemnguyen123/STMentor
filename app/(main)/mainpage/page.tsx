@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { FeedWrapper } from '@/components/feed-wrapper';
-import ErrorModal from './ErrorModal'; // Corrected import
+import ErrorModal from './ErrorModal'; 
 import { Header } from './header';
 import { useAuth } from '@clerk/clerk-react';
 import React from 'react';
@@ -25,8 +25,13 @@ const MainPage = () => {
   const [subjects, setSubjects] = useState<{ tenMonHoc: string; TC: number; diem: number; hk: string; userId: string | null; isChanged: boolean; _id: string; chuyenNganh: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [recommendation, setRecommendation] = useState<string | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false); // New state for dialog
+  const [recommendations, setRecommendations] = useState<{ [key: string]: number } | null>({
+    'Công nghệ phần mềm': 0,
+    'Công nghệ Dữ liệu': 0,
+    'Trí tuệ nhân tạo': 0,
+    'Mạng máy tính và IoT': 0
+  } as { [key: string]: number } | null);
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false); 
 
   useEffect(() => {
     if (typeof document !== 'undefined') {
@@ -44,7 +49,7 @@ const MainPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/Subjects-data');
+        const response = await fetch('/api/subjects-data');
         if (!response.ok) {
           throw new Error('Failed to fetch data');
         }
@@ -68,8 +73,7 @@ const MainPage = () => {
     };
   
     fetchData();
-  }, [userId]); 
-  
+  }, [userId]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -97,8 +101,8 @@ const MainPage = () => {
       if (response.ok) {
         toast.success('Dữ liệu đã được gửi thành công');
         setSubjects(subjects.map(subject => ({ ...subject, diem: 0, isChanged: false }))); // Reset data
-        generateRecommendation();
-        setIsDialogOpen(true); // Open the dialog
+        generateRecommendation(subjects);
+        setIsDialogOpen(true); 
       } else {
         const errorData = await response.json();
         console.error('Error response from server:', errorData);
@@ -116,7 +120,6 @@ const MainPage = () => {
     }
   };
   
-
   const handleInputChange = (tenMonHoc: string, value: string, index: number) => {
     const updatedSubjects = [...subjects];
     const parsedValue = parseFloat(value);
@@ -130,98 +133,144 @@ const MainPage = () => {
     setSubjects(updatedSubjects);
   };
 
-  const generateRecommendation = () => {
-    // Extracting subject scores
-    const scores = subjects.reduce((acc, subject) => {
+  const generateRecommendation = (subjects: { tenMonHoc: string; TC: number; diem: number; hk: string; userId: string | null; isChanged: boolean; _id: string; chuyenNganh: string }[]) => {
+    const scores = subjects.reduce((acc: { [key: string]: number }, subject) => {
       acc[subject.tenMonHoc] = subject.diem;
       return acc;
-    }, {} as { [key: string]: number });
-  
-    // Initial values for all subjects
-    const toanCaoCap = scores['Toán cao cấp và ứng dụng'] || 0;
-    const daiSoTuyenTinh = scores['Đại số tuyến tính và ứng dụng'] || 0;
-    const vatLyDaiCuong1 = scores['Vật lý đại cương 1'] || 0;
-    const vatLyDaiCuong2 = scores['Vật lý đại cương 2'] || 0;
-    const toanRoiRac = scores['Toán rời rạc'] || 0;
-    const nhapMonCNTT = scores['Nhập môn Công nghệ thông tin'] || 0;
-    const coSoLapTrinh = scores['Cơ sở lập trình'] || 0;
-    const kyThuatLapTrinh = scores['Kỹ thuật lập trình'] || 0;
-    const lapTrinhHuongDoiTuong = scores['Lập trình hướng đối tượng'] || 0;
-    const cauTrucDuLieuVaGiaiThuat = scores['Cấu trúc dữ liệu và giải thuật'] || 0;
-    const coSoDuLieu = scores['Cơ sở dữ liệu'] || 0;
-    const monMangMayTinh = scores['Nhập môn Mạng máy tính và điện toán đám mây'] || 0;
-    const cacNenTangPhatTrienPhanMem = scores['Các nền tảng phát triển phần mềm'] || 0;
-  
-    let recommendation = '';
-  
-    // Decision tree logic with all subjects
-    if (nhapMonCNTT > 6.75) {
-      if (vatLyDaiCuong2 > 8.10) {
-        if (lapTrinhHuongDoiTuong > 8.75) {
-          if (vatLyDaiCuong1 > 8.95) {
-            recommendation = 'Công nghệ phần mềm';
-          } else if (vatLyDaiCuong2 > 9.40) {
-            recommendation = 'Trí tuệ nhân tạo';
-          } else if (nhapMonCNTT > 8.60) {
-            recommendation = 'An ninh Mạng và IoT';
-          } else {
-            recommendation = 'Công nghệ phần mềm';
-          }
-        } else if (coSoDuLieu > 7.15) {
-          recommendation = 'An ninh Mạng và IoT';
-        } else {
-          recommendation = 'Công nghệ phần mềm';
-        }
-      } else if (cauTrucDuLieuVaGiaiThuat > 6.55) {
-        if (coSoDuLieu > 3.30) {
-          if (vatLyDaiCuong2 > 8.25) {
-            if (vatLyDaiCuong2 > 8.80) {
-              recommendation = 'Công nghệ phần mềm';
-            } else if (cacNenTangPhatTrienPhanMem > 7.80) {
-              recommendation = 'Trí tuệ nhân tạo';
-            } else {
-              recommendation = 'An ninh Mạng và IoT';
-            }
-          } else {
-            recommendation = 'Công nghệ phần mềm';
-          }
-        } else if (monMangMayTinh > 8.85) {
-          recommendation = 'An ninh Mạng và IoT';
-        } else {
-          recommendation = 'Công nghệ phần mềm';
-        }
-      } else {
-        recommendation = 'Công nghệ phần mềm';
-      }
-    } else if (cauTrucDuLieuVaGiaiThuat > 5.90) {
-      if (vatLyDaiCuong2 > 8.10) {
-        if (lapTrinhHuongDoiTuong > 6.75) {
-          recommendation = 'Trí tuệ nhân tạo';
-        } else {
-          recommendation = 'Công nghệ phần mềm';
-        }
-      } else {
-        if (coSoDuLieu > 8.30) {
-          recommendation = 'An ninh Mạng và IoT';
-        } else if (vatLyDaiCuong2 > 8.00) {
-          recommendation = 'Công nghệ phần mềm';
-        } else if (kyThuatLapTrinh > 5.90) {
-          recommendation = 'Trí tuệ nhân tạo';
-        } else {
-          recommendation = 'Công nghệ phần mềm';
-        }
-      }
-    } else if (toanRoiRac > 9.20) {
-      recommendation = 'An ninh Mạng và IoT';
-    } else {
-      recommendation = 'Công nghệ phần mềm';
-    }
-  
-    setRecommendation(recommendation);
-  };
-  
+    }, {});
+  const toanCaoCap = scores['Toán cao cấp và ứng dụng'] || 0;
+  const daiSoTuyenTinh = scores['Đại số tuyến tính và ứng dụng'] || 0;
+  const vatLyDaiCuong1 = scores['Vật lý đại cương 1'] || 0;
+  const vatLyDaiCuong2 = scores['Vật lý đại cương 2'] || 0;
+  const toanRoiRac = scores['Toán rời rạc'] || 0;
+  const nhapMonCNTT = scores['Nhập môn Công nghệ thông tin'] || 0;
+  const coSoLapTrinh = scores['Cơ sở lập trình'] || 0;
+  const kyThuatLapTrinh = scores['Kỹ thuật lập trình'] || 0;
+  const lapTrinhHuongDoiTuong = scores['Lập trình hướng đối tượng'] || 0;
+  const cauTrucDuLieuVaGiaiThuat = scores['Cấu trúc dữ liệu và giải thuật'] || 0;
+  const coSoDuLieu = scores['Cơ sở dữ liệu'] || 0;
+  const monMangMayTinh = scores['Nhập môn Mạng máy tính và điện toán đám mây'] || 0;
+  const cacNenTangPhatTrienPhanMem = scores['Các nền tảng phát triển phần mềm'] || 0;
 
-  const groupedSubjects = subjects.reduce((acc, subject) => {
+  const recommendations: { [key: string]: number } = {
+    'Công nghệ phần mềm': 0,
+    'Công nghệ Dữ liệu': 0,
+    'Trí tuệ nhân tạo': 0,
+    'Mạng máy tính và IoT': 0
+  };
+
+  const decisionTree = [
+    {
+      condition: () => nhapMonCNTT > 6.75,
+      trueBranch: [
+        {
+          condition: () => vatLyDaiCuong2 > 8.10,
+          trueBranch: [
+            {
+              condition: () => lapTrinhHuongDoiTuong > 8.75,
+              recommendation: 'Công nghệ phần mềm',
+              value: 20
+            },
+            {
+              condition: () => vatLyDaiCuong2 > 9.40 && toanCaoCap > 8.60,
+              recommendation: 'Công nghệ Dữ liệu',
+              value: 15
+            },
+            {
+              condition: () => cauTrucDuLieuVaGiaiThuat > 5.90 && coSoLapTrinh > 8.05 && nhapMonCNTT > 5.00,
+              recommendation: 'Mạng máy tính và IoT',
+              value: 10
+            }
+          ],
+          falseBranch: [
+            {
+              condition: () => vatLyDaiCuong1 > 7.00,
+              recommendation: 'Trí tuệ nhân tạo',
+              value: 5
+            }
+          ]
+        }
+      ],
+      falseBranch: [
+        {
+          condition: () => cauTrucDuLieuVaGiaiThuat > 5.90 && coSoLapTrinh > 8.05 && vatLyDaiCuong2 > 8.95 && nhapMonCNTT > 5.00,
+          recommendation: 'Mạng máy tính và IoT',
+          value: 10
+        },
+        {
+          condition: () => cauTrucDuLieuVaGiaiThuat > 6.55 && coSoDuLieu > 3.30 && kyThuatLapTrinh > 5.90,
+          recommendation: 'Công nghệ Dữ liệu',
+          value: 10
+        },
+        {
+          condition: () => vatLyDaiCuong1 <= 5.00,
+          recommendation: 'Công nghệ phần mềm',
+          value: 5
+        }
+      ]
+    },
+    {
+      condition: () => monMangMayTinh > 8.85 && daiSoTuyenTinh > 8.15 && toanRoiRac > 9.20,
+      recommendation: 'Trí tuệ nhân tạo',
+      value: 25
+    },
+    {
+      condition: () => coSoDuLieu > 7.00,
+      recommendation: 'Công nghệ phần mềm',
+      value: 10
+    },
+    {
+      condition: () => coSoLapTrinh > 8.00,
+      recommendation: 'Công nghệ phần mềm',
+      value: 15
+    },
+    {
+      condition: () => kyThuatLapTrinh > 7.50,
+      recommendation: 'Công nghệ Dữ liệu',
+      value: 10
+    },
+    {
+      condition: () => cacNenTangPhatTrienPhanMem > 8.00,
+      recommendation: 'Công nghệ phần mềm',
+      value: 20
+    },
+    {
+      condition: () => nhapMonCNTT <= 5.00,
+      recommendation: 'Trí tuệ nhân tạo',
+      value: 5
+    },
+    {
+      condition: () => toanCaoCap <= 5.00,
+      recommendation: 'Mạng máy tính và IoT',
+      value: 5
+    },
+    {
+      condition: () => toanRoiRac <= 5.00,
+      recommendation: 'Công nghệ Dữ liệu',
+      value: 5
+    }
+  ];
+
+  const processTree = (tree: any[]) => {
+    tree.forEach(node => {
+      if (node.condition()) {
+        if (node.trueBranch) {
+          processTree(node.trueBranch);
+        } else {
+          recommendations[node.recommendation] += node.value;
+        }
+      } else if (node.falseBranch) {
+        processTree(node.falseBranch);
+      }
+    });
+  };
+
+  processTree(decisionTree);
+
+  setRecommendations(recommendations);
+};
+
+  const groupedSubjects = subjects.reduce((acc: { [key: string]: { tenMonHoc: string; TC: number; diem: number; hk: string; userId: string | null; isChanged: boolean; _id: string }[] }, subject) => {
     if (!acc[subject.chuyenNganh]) {
       acc[subject.chuyenNganh] = [];
     }
@@ -293,14 +342,17 @@ const MainPage = () => {
           </form>
         </div>
   
-        {/* Recommendation Dialog */}
-        {recommendation && (
+        {recommendations && (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle className="text-2xl">Hệ Thống Khuyến Nghị :</DialogTitle>
                 <DialogDescription className="text-lg mt-2">
-                  Dựa vào điểm của bạn thì chuyên ngành khuyến nghị bạn nên chọn <span className="font-bold text-blue-600 text-lg">{recommendation}</span>
+                  {Object.keys(recommendations).map((major, index) => (
+                    <div key={index} className="mb-2">
+                      {major}: <span className="font-bold text-blue-600 text-lg">{recommendations[major].toFixed(2)}%</span>
+                    </div>
+                  ))}
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
@@ -311,15 +363,12 @@ const MainPage = () => {
             </DialogContent>
           </Dialog>
         )}
-        {/* Error Modal */}
         {error && <ErrorModal message={error} onClose={() => setError(null)} />}
   
         <ToastContainer />
       </FeedWrapper>
     </div>
   );
-  
-  
 };
 
 export default MainPage;

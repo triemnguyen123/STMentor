@@ -23,7 +23,9 @@ const AdminCTDT = () => {
   const [courses, setCourses] = useState<string[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
- 
+  const [programToDeleteId, setProgramToDeleteId] = useState<string>('');
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -38,25 +40,27 @@ const AdminCTDT = () => {
         console.error('Failed to fetch courses:', error);
       }
     };
-
+  
     fetchCourses();
   }, []);
-
+  
   useEffect(() => {
     if (user) {
       fetchUsers();
     }
   }, [user]);
-
+  
   useEffect(() => {
     if (selectedUserId && selectedCourse) {
       fetchPrograms(selectedUserId, selectedCourse);
       loadCheckboxes(selectedUserId);
     }
   }, [selectedUserId, selectedCourse]);
+  
   useEffect(() => {
     setIsDialogOpen(true); 
   }, []);
+  
   const fetchUsers = async () => {
     try {
       const res = await fetch('/api/users');
@@ -77,13 +81,16 @@ const AdminCTDT = () => {
         throw new Error('Failed to fetch programs');
       }
       const data = await res.json();
-      data.sort((a: Record<string, any>, b: Record<string, any>) => a['Mã học phần'].localeCompare(b['Mã học phần']));
+      data.sort((a: Record<string, any>, b: Record<string, any>) => 
+        a['Mã học phần'].localeCompare(b['Mã học phần'])
+      );
       setPrograms(data);
     } catch (error: any) {
       console.error('Failed to fetch programs:', error);
       alert('Failed to fetch programs: ' + error.message);
     }
   };
+  
 
   const loadCheckboxes = async (userId: string) => {
     try {
@@ -191,16 +198,17 @@ const AdminCTDT = () => {
 
     const { ma, ten, soTinChi } = formData;
 
-    const existingProgram = programs.find(program => program['Mã học phần'] === ma || program['Tên học phần '] === ten);
+    const existingProgram = programs.find(program => program['Mã học phần'] === ma || program['Tên học phần'] === ten);
     if (existingProgram) {
       toast.error('Mã học phần hoặc tên học phần đã tồn tại. Vui lòng nhập thông tin khác.');
       return;
     }
 
     const newProgram = {
-      'Mã học phần': ma,
-      'Tên học phần ': ten,
+      'Mã học phần': ma.trim(),
+      'Tên học phần': ten.trim(),
       TC: soTinChi,
+      khoa: selectedCourse,
       isNew: true
     };
 
@@ -210,7 +218,7 @@ const AdminCTDT = () => {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ program: newProgram })
+        body: JSON.stringify({ program: newProgram, userId: selectedUserId, course: selectedCourse })
       });
 
       if (!res.ok) {
@@ -236,6 +244,7 @@ const AdminCTDT = () => {
     }
   };
 
+
   const handleEditProgram = async () => {
     if (!validateInputEdit()) {
       return;
@@ -245,7 +254,7 @@ const AdminCTDT = () => {
 
     const updatedProgram = {
       'Mã học phần': ma,
-      'Tên học phần ': ten,
+      'Tên học phần': ten,
       TC: soTinChi
     };
 
@@ -313,12 +322,52 @@ const AdminCTDT = () => {
     }
   };
 
+  const openDeleteConfirmationDialog = (id: string) => {
+    setProgramToDeleteId(id);
+    setIsDeleteDialogOpen(true);
+  };
+  
+  
+  const confirmDeleteProgram = async () => {
+    try {
+      const res = await fetch('/api/delete-program', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: programToDeleteId }), // Sử dụng id đã lưu để xóa
+      });
+  
+      if (!res.ok) {
+        throw new Error('Failed to delete program');
+      }
+  
+      await fetchPrograms(selectedUserId, selectedCourse);
+  
+      toast.success('Bạn đã xóa môn học thành công', {
+        position: "top-right",
+        autoClose: 1000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+  
+      // Đóng Dialog sau khi xóa thành công
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error('Failed to delete program:', error);
+      alert('Failed to delete program: ' + (error as Error).message);
+    }
+  };
+
 
   const openEditPopup = (program: any) => {
       setEditFormData({
           id: program._id,
           ma: program['Mã học phần'],
-          ten: program['Tên học phần '],
+          ten: program['Tên học phần'],
           soTinChi: program.TC
       });
       setIsEditPopupOpen(true);
@@ -458,7 +507,7 @@ const AdminCTDT = () => {
                       style={{ fontWeight: program.isNew ? 'bold' : 'normal' }}
                     >
                       <td className="border border-gray-300 px-4 py-2">{program['Mã học phần']}</td>
-                      <td className="border border-gray-300 px-4 py-2">{program['Tên học phần ']}</td>
+                      <td className="border border-gray-300 px-4 py-2">{program['Tên học phần']}</td>
                       <td className="border border-gray-300 px-4 py-2">{program.TC !== undefined ? program.TC : 'N/A'}</td>
                       <td className="border border-gray-300 px-4 py-2 text-center">
                         <input
@@ -477,7 +526,7 @@ const AdminCTDT = () => {
                           Sửa
                         </Button>
                         <Button
-                          onClick={() => handleDeleteProgram(program._id)}
+                          onClick={() => openDeleteConfirmationDialog(program._id)} 
                           variant="default"
                           className="py-1 px-2 bg-red-500 text-white hover:bg-red-700"
                         >
@@ -491,6 +540,7 @@ const AdminCTDT = () => {
             </div>
           )}
         </div>
+  
         {isPopupOpen && (
           <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
             <div className="bg-white p-6 rounded-md shadow-md w-96">
@@ -597,6 +647,8 @@ const AdminCTDT = () => {
             </div>
           </div>
         )}
+        
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
             <DialogHeader>
@@ -634,6 +686,7 @@ const AdminCTDT = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        
       </FeedWrapper>
       <ToastContainer />
     </div>

@@ -4,4 +4,12 @@ services:
     build:
       context: .
     ports:
-      - "3000:3000"
+      - "80:8000"
+      - "81:8000"
+    environment:
+      DEBUG: "true"
+      NODE_ENV: "production"
+      PORT: 8000
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_ZHJpdmVuLW11c2tveC02LmNsZXJrLmFjY291bnRzLmRldiQ"
+      CLERK_SECRET_KEY: "sk_test_DUr09a7M4Qe5IFdaQcl6WxnUuzAe8kquuGWTlf7DWo"
+      MONGODB_URI: "mongodb+srv://triem123:triem123@cluster0.t6xyjxm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
